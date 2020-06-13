@@ -1,0 +1,101 @@
+{
+	"name": "thaw-ta-math",
+	"version": "0.0.0",
+	"description": "Financial technical analysis library in TypeScript. Calculates indicators amd overlays from OHLCV data.",
+	"keywords": [
+		"finance",
+		"fintech",
+		"technical analysis",
+		"TypeScript"
+	],
+	"private": false,
+	"homepage": "https://github.com/tom-weatherhead/thaw-ta-math#readme",
+	"repository": "github:tom-weatherhead/thaw-ta-math",
+	"bugs": {
+		"url": "https://github.com/tom-weatherhead/thaw-ta-math/issues"
+	},
+	"main": "lib/index.js",
+	"types": "lib/index.d.ts",
+	"// module": "lib/ta-math.esm.js",
+	"// browser": "lib/ta-math.es5.js",
+	"files": [
+		"lib"
+	],
+	"bin": {},
+	"man": [],
+	"directories": {
+		"lib": "lib",
+		"// bin": "It is an error to specify both bin and directories.bin",
+		"man": "man",
+		"// doc": "Put markdown files in the directories.doc directory",
+		"doc": "doc",
+		"example": "examples",
+		"test": "test"
+	},
+	"scripts": {
+		"all": "npm run rebuild-online && npm pack && npm run deploy",
+		"allw": "rmdir /Q /S coverage & rmdir /Q /S lib & npm run lint & npm run prettiercheck & npm run build & npm test & npm pack & move /Y npm-package-project-template.ts-*.tgz C:\\git\\npm-packages\\",
+		"travis": "npm run rebuild-online",
+		"rebuild-offline": "npm run clean-offline && npm run lint && npm run prettiercheck && npm run build",
+		"clean-offline": "rm -rf lib",
+		"rebuild-online": "npm run clean-online && npm i && npm run build-and-test",
+		"clean-online": "npm run clean-offline && rm -rf node_modules && rm -f package-lock.json",
+		"build-and-test": "npm run lint && npm run prettiercheck && npm run build && npm test",
+		"test": "jest --config jestconfig.json",
+		"build": "tsc",
+		"deploy": "eval mv $npm_package_name-$npm_package_version.tgz $(echo $npm_package_config_deploy_target_dir)/",
+		"prettiercheck": "prettier --check \"src/**/*.ts\" \"test/**/*.ts\"",
+		"format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+		"lint": "tslint -p tsconfig.json",
+		"prepare": "npm run build",
+		"prepublishOnly": "npm run lint && npm run prettiercheck && npm test",
+		"preversion": "npm run lint && npm run prettiercheck",
+		"version": "npm run format && git add -A src",
+		"postversion": "git push && git push --tags",
+		"loc": "git ls-files | grep -v package-lock.json | tr -d '\\r' | tr '\\n' '\\0' | xargs -0 wc -l",
+		"f": "npm run format && npm run all",
+		"start": "npm run all"
+	},
+	"config": {
+		"deploy_target_dir": "$NPM_PKG_DIR"
+	},
+	"publishConfig": {},
+	"dependencies": {
+		"thaw-common-utilities.ts": "^0.0.1"
+	},
+	"devDependencies": {
+		"@types/jest": "^26.0.0",
+		"@types/node": "^14.0.13",
+		"codecov": "^3.7.0",
+		"jest": "^26.0.1",
+		"prettier": "^2.0.5",
+		"ts-jest": "^26.1.0",
+		"tslint": "^6.1.2",
+		"tslint-config-prettier": "^1.18.0",
+		"typescript": "^3.9.5"
+	},
+	"peerDependencies": {},
+	"// bundledDependencies": "... is an array of package names",
+	"bundledDependencies": [],
+	"optionalDependencies": {},
+	"engines": {
+		"node": ">= 8"
+	},
+	"os": [
+		"darwin",
+		"linux",
+		"win32"
+	],
+	"cpu": [
+		"ia32",
+		"x64"
+	],
+	"contributors": [
+		"Buddy Guy <deadbeef@decafbad.gov>",
+		"Deprecated <deadc0de@obso1337.org>",
+		"Autonomous Weapons Systems Unlimited <killer@robots.com>",
+		"Sgt. Pepper <shoot1st@thinkl8r.mil>"
+	],
+	"author": "Tom Weatherhead <thaw@2hrd4u.org> (https://github.com/tom-weatherhead)",
+	"license": "MIT"
+}

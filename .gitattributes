@@ -1,0 +1,56 @@
+# .gitattributes
+
+# foo=bar -> Sets the attribute 'foo=bar' to true
+# foo=-bar -> Sets the attribute 'foo=bar' to false
+# foo=!bar -> Sets the attribute 'foo=bar' to Unspecified
+
+# whitespace=comma,separated,list,of,values
+# 'git diff' will use color.diff.whitespace to highlight them
+# 'git apply --whitespace=error' will consider them as errors
+# Possible values are:
+# - blank-at-eol treats trailing whitespaces at the end of the line as an error (enabled by default)
+# - space-before-tab treats a space character that appears immediately before a tab character in the initial indent part of the line as an error (enabled by default)
+# - indent-with-non-tab treats a line that is indented with space characters instead of the equivalent tabs as an error (not enabled by default)
+# - tab-in-indent treats a tab character in the initial indent part of the line as an error (not enabled by default)
+# - blank-at-eof treats blank lines added at the end of file as an error (enabled by default)
+# - trailing-space is a short-hand to cover both blank-at-eol and blank-at-eof
+# - cr-at-eol treats a carriage-return at the end of line as part of the line terminator, i.e. with it, trailing-space does not trigger if the character before such a carriage-return is not a whitespace (not enabled by default)
+# - tabwidth=<n> tells how many character positions a tab occupies;	 this is relevant for indent-with-non-tab and when Git fixes tab-in-indent errors. The default tab width is 8. Allowed values are 1 to 63
+
+# * text=auto eol=lf whitespace=blank-at-eol,space-before-tab,indent-with-non-tab,-tab-in-indent,blank-at-eof,cr-at-eol,tabwidth=4
+# I.e. * text=auto eol=lf whitespace=space-before-tab,indent-with-non-tab,-tab-in-indent,trailing-space,cr-at-eol,tabwidth=4
+
+# * text=auto eol=lf whitespace=!indent,trail,space
+*			text=auto eol=lf whitespace=indent-with-non-tab,tabwidth=4
+
+# All dotfiles are text:
+.*			text
+
+# Git repository files:
+LICENSE		text
+*.md		text whitespace=-blank-at-eol
+
+# npm package files:
+*.json		text
+
+*.txt		text
+
+*.sh		text
+
+# YAML files must not contain spaces:
+*.yaml		text whitespace=-indent-with-non-tab,tab-in-indent,tabwidth=2
+*.yml		text whitespace=-indent-with-non-tab,tab-in-indent,tabwidth=2
+
+# Files specific to Microsoft Windows:
+*.bat		text eol=crlf
+*.ps1		text eol=crlf
+*.vcproj	text eol=crlf
+
+# Binary files:
+*.bmp		-diff -text
+*.ico		-diff -text
+*.jpg		-diff -text
+*.pdf		-diff -text
+*.png		-diff -text
+
+# Files specific to this repository (thaw-ta-math):

@@ -1,0 +1,51 @@
+# Editor configuration. See https://editorconfig.org
+# The complete list of properties can be found at https://github.com/editorconfig/editorconfig/wiki/EditorConfig-Properties
+
+# Topmost EditorConfig file
+root = true
+
+[*]
+# charset = latin1 | utf-8 | utf-16be (big-endian?) | utf-16le (little-endian?) | utf-8-bom (bom = byte order marker)
+charset = utf-8
+
+# indent_style = tab | space
+indent_style = tab
+
+# indent_size = tab | a positive integer ; tab_width defaults to indent_size when indent_size is a number
+indent_size = 4
+
+# tab_width = a positive integer
+# tab_width = 4
+
+# max_line_length = a positive integer | off
+# max_line_length is supported by: Emacs, Vim, Atom, (ReSharper and Rider),
+# (AppCode, IntelliJ IDEA, PhpStorm, PyCharm, RubyMine, and WebStorm), and Kakoune
+max_line_length = 78
+
+# trim_trailing_whitespace = true | false
+trim_trailing_whitespace = true
+
+# end_of_line = cr | crlf | lf
+end_of_line = lf
+
+# insert_final_newline = true | false
+insert_final_newline = true
+
+[package.json]
+max_line_length = off
+
+[*.md]
+max_line_length = off
+trim_trailing_whitespace = false
+
+# Tabs are forbidden in YAML files. See https://yaml.org/faq.html
+[*.{yaml,yml}]
+indent_style = space
+indent_size = 2
+
+# Windows-only non-binary files should use the Windows end_of_line (CRLF)
+[*.{bat,ps1,vcproj}]
+end_of_line = crlf
+
+[COMMIT_EDITMSG]
+max_line_length = 72
