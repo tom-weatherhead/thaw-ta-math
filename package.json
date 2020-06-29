@@ -33,9 +33,9 @@
 		"test": "test"
 	},
 	"scripts": {
-		"all": "npm run rebuild-online && npm pack && npm run deploy",
+		"all": "npm run travis && npm pack && npm run deploy",
 		"allw": "rmdir /Q /S coverage & rmdir /Q /S lib & npm run lint & npm run prettiercheck & npm run build & npm test & npm pack & move /Y npm-package-project-template.ts-*.tgz C:\\git\\npm-packages\\",
-		"travis": "npm run rebuild-online",
+		"travis": "npm run rebuild-offline",
 		"rebuild-offline": "npm run clean-offline && npm run lint && npm run prettiercheck && npm run build",
 		"clean-offline": "rm -rf lib",
 		"rebuild-online": "npm run clean-online && npm i && npm run build-and-test",
@@ -61,7 +61,7 @@
 	},
 	"publishConfig": {},
 	"dependencies": {
-		"thaw-common-utilities.ts": "^0.0.1"
+		"thaw-common-utilities.ts": "file:thaw-common-utilities.ts.tgz"
 	},
 	"devDependencies": {
 		"@types/jest": "^26.0.0",
