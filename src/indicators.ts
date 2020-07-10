@@ -3,15 +3,15 @@
 import { createNaNArray, pointwise, rolling } from 'thaw-common-utilities.ts';
 
 import {
-	atr,
+	// atr,
 	ema,
-	expdev,
+	// expdev,
 	madev,
 	multiply,
 	// pointwise,
 	// rolling,
 	sma,
-	stdev,
+	// stdev,
 	subtract,
 	sum,
 	trueRange,

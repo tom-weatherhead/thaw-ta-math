@@ -4,19 +4,19 @@ import { createNaNArray, pointwise } from 'thaw-common-utilities.ts';
 
 import {
 	sma,
-	ema,
-	stdev,
-	expdev,
+	// ema,
+	stdev // ,
+	// expdev,
 	// pointwise,
-	atr,
-	typicalPrice
+	// atr,
+	// typicalPrice
 } from './core';
 
 /* Overlays */
 
 // Bollinger himself recommends the defaults window = 20 and mult = 2
 // export function bb($close: number[], window = 15, mult = 2) {
-export function bb($close: number[], window = 20, mult = 2) {
+export function bb($close: number[], window = 20, mult = 2): any {
 	const ma = sma($close, window);
 	const dev = stdev($close, window); // Standard deviation
 	const upper = pointwise((a: number, b: number) => a + b * mult, ma, dev);
