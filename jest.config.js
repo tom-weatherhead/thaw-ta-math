@@ -8,8 +8,10 @@
 'use strict';
 
 module.exports = {
-	"testRegex": "(/test/.+\\.test\\.ts$)",
-	"moduleFileExtensions": ["ts", "js"],
+	"collectCoverage": true,
 	"coverageDirectory": "./coverage/",
-	"collectCoverage": true
+	"moduleFileExtensions": ["ts", "js"],
+	"testEnvironment": "node",
+	"testRegex": "(/test/.+\\.test\\.ts$)",
+	"transformIgnorePatterns": ["/node_modules/(?!thaw-common-utilities.ts)/"]
 };

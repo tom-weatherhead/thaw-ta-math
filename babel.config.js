@@ -9,28 +9,21 @@
 
 'use strict';
 
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const semver = require('semver');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const pkg = require('./package.json');
 
 const supportedNodeVersion = semver.minVersion(pkg.engines.node).version;
 
 module.exports = {
-	"env": {
-		"test": {
-			"plugins": [
-				["@babel/plugin-transform-modules-commonjs", {allowTopLevelThis: true}],
-				'@babel/plugin-transform-strict-mode',
-				'@babel/plugin-proposal-class-properties'
-			]
-		}
-	},
 	"presets": [
 		[
 			"@babel/preset-env",
 			{
-				exclude: ["@babel/plugin-proposal-dynamic-import"],
-				shippedProposals: true,
-				targets: {node: supportedNodeVersion}
+				targets: {
+					node: supportedNodeVersion
+				}
 			}
 		],
 		"@babel/preset-typescript"
