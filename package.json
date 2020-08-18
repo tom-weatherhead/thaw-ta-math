@@ -1,6 +1,6 @@
 {
 	"name": "thaw-ta-math",
-	"version": "0.0.1",
+	"version": "0.0.2",
 	"description": "Financial technical analysis library in TypeScript. Calculates indicators amd overlays from OHLCV data.",
 	"keywords": [
 		"finance",
@@ -60,7 +60,7 @@
 	},
 	"publishConfig": {},
 	"dependencies": {
-		"thaw-common-utilities.ts": "file:thaw-common-utilities.ts.tgz"
+		"thaw-common-utilities.ts": "^0.0.2"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.11.1",
