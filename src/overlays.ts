@@ -16,7 +16,11 @@ import {
 
 // Bollinger himself recommends the defaults window = 20 and mult = 2
 // export function bb($close: number[], window = 15, mult = 2) {
-export function bb($close: number[], window = 20, mult = 2): any {
+export function bb(
+	$close: number[],
+	window = 20,
+	mult = 2
+): Record<string, number[]> {
 	const ma = sma($close, window);
 	const dev = stdev($close, window); // Standard deviation
 	const upper = pointwise((a: number, b: number) => a + b * mult, ma, dev);

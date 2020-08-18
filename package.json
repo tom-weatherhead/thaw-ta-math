@@ -60,7 +60,7 @@
 	},
 	"publishConfig": {},
 	"dependencies": {
-		"thaw-common-utilities.ts": "^0.0.2"
+		"thaw-common-utilities.ts": "file:thaw-common-utilities.ts.tgz"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.11.1",

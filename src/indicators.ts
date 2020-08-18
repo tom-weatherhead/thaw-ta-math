@@ -76,7 +76,7 @@ export function adx(
 	$low: number[],
 	$close: number[],
 	window = 14
-): any {
+): Record<string, number[]> {
 	let dmp = [0];
 	let dmm = [0];
 
@@ -217,7 +217,7 @@ export function kst(
 	s3 = 10,
 	s4 = 15,
 	sig = 9
-): any {
+): Record<string, number[]> {
 	const rcma1 = sma(roc($close, w1), s1);
 	const rcma2 = sma(roc($close, w2), s2);
 	const rcma3 = sma(roc($close, w3), s3);
@@ -246,7 +246,7 @@ export function macd(
 	winshort = 12,
 	winlong = 26,
 	winsig = 9
-): any {
+): Record<string, number[]> {
 	const line = pointwise(
 		subtract,
 		ema($close, winshort),
@@ -294,7 +294,11 @@ export function mfi(
 	);
 }
 
-export function obv($close: number[], $volume: number[], signal = 10): any {
+export function obv(
+	$close: number[],
+	$volume: number[],
+	signal = 10
+): Record<string, number[]> {
 	const result = [0];
 
 	for (let i = 1, len = $close.length; i < len; i++) {
@@ -350,7 +354,7 @@ export function stoch(
 	window = 14,
 	signal = 3,
 	smooth = 1
-): any {
+): Record<string, number[]> {
 	const lowest = rolling((s: number[]) => Math.min(...s), $low, window);
 	const highest = rolling((s: number[]) => Math.max(...s), $high, window);
 	let k = pointwise(
@@ -388,7 +392,7 @@ export function vwmacd(
 	winshort = 12,
 	winlong = 26,
 	winsig = 9
-): any {
+): Record<string, number[]> {
 	const vwprice = pointwise(multiply, $close, $volume);
 	const line = pointwise(
 		subtract,
