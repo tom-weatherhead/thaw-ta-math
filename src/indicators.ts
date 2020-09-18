@@ -1,8 +1,14 @@
 // indicators.ts
 
-import { createNaNArray, pointwise, rolling } from 'thaw-common-utilities.ts';
+import {
+	cascade,
+	createNaNArray,
+	pointwise,
+	rolling
+} from 'thaw-common-utilities.ts';
 
 import {
+	add,
 	// atr,
 	ema,
 	// expdev,
@@ -10,6 +16,7 @@ import {
 	multiply,
 	// pointwise,
 	// rolling,
+	safeDivide,
 	sma,
 	// stdev,
 	subtract,
@@ -42,6 +49,10 @@ export function ad(
 		volume: number
 	): number =>
 		high === low ? 0 : ((close - open) / (high - low)) * volume;
+
+	// Or: (current ad) = (previous ad) + cmfv,
+	// where cmfv = ((close - low) - (high - close)) * volume / (high - low)
+	// See https://www.investopedia.com/terms/a/accumulationdistribution.asp
 
 	return pointwise(fn, $open, $high, $low, $close, $volume);
 }
@@ -263,8 +274,14 @@ export function macd(
 }
 
 // Money Flow Index	- Created by Gene Quong and Avram Soudek
-// MFI is a (closed) volume indicator
+// MFI is a (closed) volume indicator, with a range [0, 100]
 // MFI = 100 - 100 / (1 + positive price * volume sum / negative price * volume sum)
+
+// MFI > 80 => Overbought
+// MFI < 20 => Oversold
+
+// Divergence case 1: Price is increasing, but MFI is decreasing
+// Divergence case 2: Price is decreasing, but MFI is increasing
 
 export function mfi(
 	$high: number[],
@@ -294,18 +311,40 @@ export function mfi(
 	);
 }
 
+// On-Balance Volume
+// See https://www.investopedia.com/terms/o/onbalancevolume.asp
+
 export function obv(
 	$close: number[],
 	$volume: number[],
 	signal = 10
 ): Record<string, number[]> {
-	const result = [0];
+	// Original implementation:
 
-	for (let i = 1, len = $close.length; i < len; i++) {
-		result.push(
-			result[i - 1] + Math.sign($close[i] - $close[i - 1]) * $volume[i]
-		);
-	}
+	// const result = [0];
+
+	// for (let i = 1, len = $close.length; i < len; i++) {
+	// 	result.push(
+	// 		result[i - 1] + Math.sign($close[i] - $close[i - 1]) * $volume[i]
+	// 	);
+	// }
+
+	// return { line: result, signal: sma(result, signal) };
+
+	// ----
+
+	// ThAW's implementation:
+	// const fn = (previous: number, current: number);
+	// const pairDiffs = cascade(fn, $close[0], $close.slice(1));
+
+	// const seed = 0;
+
+	// return [seed].concat(cascade(fn, seed, $close.slice(1)));
+
+	const array2 = [0].concat($close).slice(0, $close.length);
+	const fn = (a: number, b: number, c: number) => Math.sign(a - b) * c;
+	const array3 = pointwise(fn, $close, array2, $volume).slice(1);
+	const result = [0].concat(cascade(add, 0, array3));
 
 	return { line: result, signal: sma(result, signal) };
 }
@@ -322,7 +361,8 @@ export function roc($close: number[], window = 14): number[] {
 	return result;
 }
 
-// Relative Strength Index - Created by Welles Wilder
+// Relative Strength Index - Created by J. Welles Wilder Jr.
+// (see https://www.investopedia.com/trading/introduction-to-parabolic-sar/)
 
 // The most stereotypical interpretation of RSI is:
 // - Buy when RSI crosses above 30
@@ -380,6 +420,22 @@ export function stoch(
 
 // export function vi($high: number[], $low: number[], $close: number[], window = 14): any {
 // }
+
+// Volume-Weighted Moving Average
+
+export function vwma(
+	$close: number[],
+	$volume: number[],
+	window: number
+): number[] {
+	const vwprices = pointwise(multiply, $close, $volume);
+
+	return pointwise(
+		safeDivide,
+		rolling(add, vwprices, window),
+		rolling(add, $volume, window)
+	);
+}
 
 // Volume-Weighted MACD - Created by Buff Dormeier
 // VWMACD is a (closed) volume indicator

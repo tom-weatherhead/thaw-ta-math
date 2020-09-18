@@ -1,8 +1,14 @@
 /* Basic math */
 
-import { createNaNArray, pointwise, rolling } from 'thaw-common-utilities.ts';
+import {
+	cascade,
+	createArrayFromElement,
+	createNaNArray,
+	pointwise,
+	rolling
+} from 'thaw-common-utilities.ts';
 
-function add(a: number, b: number): number {
+export function add(a: number, b: number): number {
 	return a + b;
 }
 
@@ -12,6 +18,10 @@ export function subtract(a: number, b: number): number {
 
 export function multiply(a: number, b: number): number {
 	return a * b;
+}
+
+export function safeDivide(a: number, b: number): number {
+	return !b ? NaN : a / b;
 }
 
 function square(a: number): number {
@@ -151,23 +161,66 @@ export function sma(series: number[], window: number): number[] {
 // Exponential moving average
 
 export function ema(
-	series: number[],
-	window: number,
-	start?: number
+	array: number[],
+	period: number,
+	// start?: number
+	seedLength = 1
 ): number[] {
-	const weight = 2 / (window + 1);
-	const result = [start ? start : mean(series.slice(0, window))];
-	// TODO: const result = [start || mean(series.slice(0, window))];
+	// Original implementation:
 
-	for (let i = 1, len = series.length; i < len; i++) {
-		if (Number.isNaN(result[i - 1])) {
-			result.push(series[i]);
-		} else {
-			result.push(weight * series[i] + (1 - weight) * result[i - 1]);
-		}
+	// const weight = 2 / (window + 1);
+	// const result = [start ? start : mean(series.slice(0, window))];
+	// // TODO: const result = [start || mean(series.slice(0, window))];
+
+	// for (let i = 1, len = series.length; i < len; i++) {
+	// 	if (Number.isNaN(result[i - 1])) {
+	// 		result.push(series[i]);
+	// 	} else {
+	// 		result.push(weight * series[i] + (1 - weight) * result[i - 1]);
+	// 	}
+	// }
+
+	// return result;
+
+	// ----
+
+	// ThAW's implementation:
+
+	const isNumber = (n: unknown): boolean =>
+		typeof n === 'number' && !Number.isNaN(n) && Number.isFinite(n);
+	const alpha = 2 / (period + 1); // The smoothing constant (Appel p. 134)
+	let i = array.findIndex(isNumber);
+
+	if (i < 0) {
+		i = array.length;
 	}
 
-	return result;
+	const j = Math.min(i + seedLength - 1, array.length);
+
+	i = Math.max(i, j);
+
+	const resultArray = createArrayFromElement(NaN, i);
+	// meanValue is the initial value which stabilizes the exponential average.
+	// It is the simple average of the first seedLength values in the array,
+	// after skipping any initial run of invalid values (e.g. NaN)
+	// See the section 'Stabilizing the Exponential Average' (Appel p. 136)
+	const meanValue = mean(
+		array.slice(i + 1 - seedLength, i + 1).filter(isNumber)
+	);
+
+	return resultArray
+		.concat(
+			[meanValue],
+			cascade(
+				(seedValue: number, element: number) =>
+					!isNumber(seedValue)
+						? element
+						: alpha * element + (1 - alpha) * seedValue,
+				meanValue,
+				array.slice(i + 1)
+			)
+		)
+		.slice(0, array.length);
 }
 
 // Rolling standard deviation?
@@ -192,7 +245,7 @@ export function expdev(series: number[], window: number): number[] {
 
 /* Wilder's functions */
 
-// Average True Range?
+// Average True Range
 
 export function atr(
 	$high: number[],

@@ -1,6 +1,6 @@
 {
 	"name": "thaw-ta-math",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"description": "Financial technical analysis library in TypeScript. Calculates indicators amd overlays from OHLCV data.",
 	"keywords": [
 		"finance",
@@ -51,6 +51,7 @@
 		"preversion": "npm run lint && npm run prettiercheck",
 		"version": "npm run format && git add -A src",
 		"postversion": "git push && git push --tags",
+		"re": "npm run format && npm run clean-offline && npm run build-and-test && npm pack && npm run deploy",
 		"loc": "git ls-files | grep -v package-lock.json | tr -d '\\r' | tr '\\n' '\\0' | xargs -0 wc -l",
 		"f": "npm run format && npm run all",
 		"start": "npm run all"
@@ -60,23 +61,26 @@
 	},
 	"publishConfig": {},
 	"dependencies": {
-		"thaw-common-utilities.ts": "^0.0.2"
+		"thaw-common-utilities.ts": "file:thaw-common-utilities.ts.tgz"
 	},
 	"devDependencies": {
-		"@babel/core": "^7.11.1",
-		"@babel/preset-env": "^7.11.0",
+		"@babel/core": "^7.11.6",
+		"@babel/preset-env": "^7.11.5",
 		"@babel/preset-typescript": "^7.10.4",
-		"@types/eslint": "^7.2.0",
-		"@types/jest": "^26.0.10",
-		"@types/node": "^14.6.0",
-		"@typescript-eslint/eslint-plugin": "^3.9.1",
-		"@typescript-eslint/parser": "^3.9.1",
+		"@d3fc/d3fc-technical-indicator": "^8.0.1",
+		"@types/eslint": "^7.2.2",
+		"@types/jest": "^26.0.13",
+		"@types/node": "^14.10.1",
+		"@typescript-eslint/eslint-plugin": "^4.1.1",
+		"@typescript-eslint/parser": "^4.1.1",
 		"codecov": "^3.7.2",
-		"eslint": "^7.7.0",
-		"jest": "^26.4.0",
-		"prettier": "^2.0.5",
+		"d3-array": "^2.7.1",
+		"eslint": "^7.9.0",
+		"jest": "^26.4.2",
+		"macd": "^1.0.2",
+		"prettier": "^2.1.1",
 		"semver": "^7.3.2",
-		"typescript": "^3.9.7"
+		"typescript": "^4.0.2"
 	},
 	"peerDependencies": {},
 	"// bundledDependencies": "... is an array of package names",
