@@ -4,6 +4,12 @@ import { createNaNArray, pointwise } from 'thaw-common-utilities.ts';
 
 import { sma, ema, stdev, expdev, atr, typicalPrice } from './core';
 
+export interface IVbpResult {
+	bottom: number;
+	top: number;
+	volumes: number[];
+}
+
 /* Overlays */
 
 // Bollinger himself recommends the defaults window = 20 and mult = 2
@@ -31,13 +37,17 @@ export function dema($close: number[], window = 10): number[] {
 	);
 }
 
-export function ebb($close: number[], window = 10, mult = 2): any {
+export function ebb(
+	$close: number[],
+	window = 10,
+	mult = 2
+): Record<string, number[]> {
 	const ma = ema($close, window);
 	const dev = expdev($close, window);
 	const upper = pointwise((a: number, b: number) => a + b * mult, ma, dev);
 	const lower = pointwise((a: number, b: number) => a - b * mult, ma, dev);
 
-	return { lower: lower, middle: ma, upper: upper };
+	return { lower, middle: ma, upper };
 }
 
 export function keltner(
@@ -46,7 +56,7 @@ export function keltner(
 	$close: number[],
 	window = 14,
 	mult = 2
-): any {
+): Record<string, number[]> {
 	const middle = ema($close, window);
 	const upper = pointwise(
 		(a: number, b: number) => a + mult * b,
@@ -59,7 +69,7 @@ export function keltner(
 		atr($high, $low, $close, window)
 	);
 
-	return { lower: lower, middle: middle, upper: upper };
+	return { lower, middle, upper };
 }
 
 export function psar(
@@ -115,7 +125,7 @@ export function vbp(
 	zones = 12,
 	left = 0,
 	right = NaN
-): any {
+): IVbpResult {
 	let total = 0;
 	let bottom = Infinity;
 	let top = -Infinity;
@@ -136,11 +146,9 @@ export function vbp(
 	}
 
 	return {
-		bottom: bottom,
-		top: top,
-		volumes: vbp.map((x) => {
-			return x / total;
-		})
+		bottom, // number
+		top, // number
+		volumes: vbp.map((x) => x / total) // number[]
 	};
 }
 
@@ -167,7 +175,7 @@ export function zigzag(
 	$high: number[],
 	$low: number[],
 	percent = 15
-): any {
+): Record<string, number[]> {
 	let lowest = $low[0];
 	let thattime = $time[0];
 	let isUp = false;
@@ -204,7 +212,7 @@ export function zigzag(
 			}
 		}
 	}
-	return { time: time, price: zigzag };
+	return { time, price: zigzag };
 }
 
 // ThAW's own algorithm: 2020-05-13

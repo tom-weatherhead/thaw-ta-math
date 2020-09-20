@@ -28,6 +28,11 @@ import {
 
 import { bb } from './overlays';
 
+interface IExtrema {
+	high: number;
+	low: number;
+}
+
 /* Indicators */
 
 // Accumulation / Distribution - Created by Larry Williams
@@ -419,7 +424,7 @@ export function stochRsi(
 	window = 14,
 	signal = 3,
 	smooth = 1
-): any {
+): Record<string, number[]> {
 	const _rsi = rsi($close, window);
 	const extreme = rolling(
 		(s: Array<number>) => {
@@ -429,7 +434,9 @@ export function stochRsi(
 		window
 	);
 	let K = pointwise(
-		(rsi: number, e: any) => (rsi - e.low) / (e.high - e.low),
+		(rsi: number, e: unknown) =>
+			(rsi - (e as IExtrema).low) /
+			((e as IExtrema).high - (e as IExtrema).low),
 		_rsi,
 		extreme
 	);
@@ -451,7 +458,7 @@ export function vi(
 	$low: number[],
 	$close: number[],
 	window = 14
-): any {
+): Record<string, number[]> {
 	const pv = [($high[0] - $low[0]) / 2];
 	const nv = [pv[0]];
 
