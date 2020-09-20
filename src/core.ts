@@ -75,44 +75,6 @@ export function mad(array: number[]): number {
 
 /* Functional programming */
 
-// TODO: Use the version of 'pointwise' that is in thaw-common-utilities.ts
-
-// export function pointwise(
-// 	// The tslint:disable comment suppresses the given TSLint rule for the following line.
-// 	/* tslint:disable:ban-types */
-// 	operation: Function,
-// 	...serieses: number[][]
-// ): number[] {
-// 	const result = [];
-
-// 	for (let i = 0, len = serieses[0].length; i < len; i++) {
-// 		const iseries = (j: number) => serieses.map(x => x[j]);
-
-// 		// result[i] = operation(...iseries(i));
-// 		result.push(operation(...iseries(i)));
-// 	}
-
-// 	return result;
-// }
-
-// TODO: Use the version of 'rolling' that is in thaw-common-utilities.ts
-
-// export function rolling(
-// 	operation: Function,
-// 	series: number[],
-// 	window: number
-// ): number[] {
-// 	const result = [];
-
-// 	for (let i = 0, len = series.length; i < len; i++) {
-// 		const j = i + 1 - window;
-
-// 		result.push(operation(series.slice(j > 0 ? j : 0, i + 1)));
-// 	}
-
-// 	return result;
-// }
-
 /* Scaled and percentage error */
 
 export function mae(f: number[], g: number[]): number {
@@ -243,7 +205,7 @@ export function expdev(series: number[], window: number): number[] {
 	return pointwise((x: number) => Math.sqrt(x), ema(sqrDiff, window));
 }
 
-/* Wilder's functions */
+/* J. Welles Wilder Jr.'s functions */
 
 // Average True Range
 

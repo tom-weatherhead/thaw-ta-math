@@ -29,37 +29,114 @@ export function bb(
 	return { lower, middle: ma, upper };
 }
 
-// export function dema($close: number[], window = 10) {
-// 	;
-// }
+export function dema($close: number[], window = 10) {
+	let ema1 = ema($close, window);
 
-// export function ebb($close: number[], window = 10, mult = 2) {
-// 	;
-// }
+	return pointwise((a: number, b: number) => 2 * a - b, ema1, ema(ema1, window));
+}
 
-// export function keltner($close: number[], window= 14, mult = 2) {
-// 	;
-// }
+export function ebb($close: number[], window = 10, mult = 2) {
+	let ma = ema($close, window);
+	let dev = expdev($close, window);
+	let upper = pointwise((a: number, b: number) => a + b * mult, ma, dev);
+	let lower = pointwise((a: number, b: number) => a - b * mult, ma, dev);
 
-// export function psar($close: number[], factor = 0.02, maxfactor = 0.2) {
-// 	;
-// }
+	return { lower : lower, middle : ma, upper : upper };
+}
 
-// export function tema($close: number[], window = 10) {
-// 	;
-// }
+export function keltner($high: number[], $low: number[], $close: number[], window = 14, mult = 2) {
+	let middle = ema($close, window);
+	let upper = pointwise((a: number, b: number) => a + mult * b, middle, atr($high, $low, $close, window));
+	let lower = pointwise((a: number, b: number) => a - mult * b, middle, atr($high, $low, $close, window));
 
-// export function vbp($close: number[], zones = 12, left = 0, right = NaN) {
-// 	;
-// }
+	return { lower: lower, middle: middle, upper: upper };
+}
 
-// export function vwap($close: number[]) {
-// 	;
-// }
+export function psar($high: number[], $low: number[], stepfactor = 0.02, maxfactor = 0.2) {
+	let isUp = true;
+	let factor = stepfactor;
+	let extreme = Math.max($high[0], $high[1]);
+	let psar = [$low[0], Math.min($low[0],  $low[1])];
+	let cursar = psar[1];
 
-// export function zigzag($close: number[], percent = 15) {
-// 	;
-// }
+	for (let i = 2, len = $high.length; i < len; i++) {
+		cursar = cursar + factor * (extreme - cursar);
+
+		if ((isUp && $high[i] > extreme) || (!isUp && $low[i] < extreme)) {
+			factor = ((factor <= maxfactor) ? factor + stepfactor : maxfactor);
+			extreme = (isUp) ? $high[i] : $low[i];
+		}
+
+		if ((isUp && $low[i] < cursar) || (!isUp && cursar > $high[i])) {
+			isUp = !isUp;
+			factor = stepfactor;
+			cursar = (isUp) ? Math.min(...$low.slice(i - 2, i + 1)) : Math.max(...$high.slice(i - 2, i + 1));
+		}
+
+		//console.log(`isUp=${isUp}, c=${$low[i]}, extreme=${extreme.toFixed(2)}, factor=${factor}, sar=${cursar.toFixed(2)}`);
+		psar.push(cursar);
+	}
+
+	return psar;
+}
+
+export function tema($close: number[], window = 10) {
+	let ema1 = ema($close, window);
+	let ema2 = ema(ema1, window);
+
+	return pointwise((a: number, b: number, c: number) => 3 * a - 3 * b + c, ema1, ema2, ema(ema2, window));
+}
+
+export function vbp($close: number[], $volume: number[], zones = 12, left = 0, right = NaN) {
+	let total = 0;
+	let bottom = Infinity;
+	let top = -Infinity;
+	let vbp = new Array(zones).fill(0);
+
+	right = !isNaN(right) ? right : $close.length;
+
+	for (let i = left; i < right; i++) {
+		total += $volume[i];
+		top = (top < $close[i]) ? $close[i] : top;
+		bottom = (bottom > $close[i]) ? $close[i] : bottom;
+	}
+
+	for (let i = left; i < right; i++) {
+		vbp[Math.floor(($close[i] - bottom) / (top - bottom) * (zones - 1))] += $volume[i];
+	}
+
+	return { bottom: bottom, top: top, volumes: vbp.map((x) => { return x / total }) };
+}
+
+export function vwap($high: number[], $low: number[], $close: number[], $volume: number[]) {
+	let tp = typicalPrice($high, $low, $close), cumulVTP = [$volume[0] * tp[0]], cumulV = [$volume[0]];
+
+	for(let i = 1, len = $close.length; i < len; i++) {
+		cumulVTP[i] = cumulVTP[i - 1] + $volume[i] * tp[i];
+		cumulV[i] = cumulV[i - 1] + $volume[i];
+	}
+
+	return pointwise((a: number, b: number) => a / b, cumulVTP, cumulV)
+}
+
+export function zigzag($time: number[], $high: number[], $low: number[], percent = 15) {
+  let lowest = $low[0],         thattime = $time[0],    isUp = false;
+  let highest = $high[0],       time = [],              zigzag = [];
+  for (let i = 1, len = $time.length; i < len; i++) {
+    if (isUp) {
+      if ($high[i] > highest) { thattime = $time[i];    highest = $high[i]; }
+      else if ($low[i] < lowest + (highest - lowest) * (100 - percent) / 100) {
+        isUp = false;           time.push(thattime);    zigzag.push(highest);   lowest = $low[i];
+      }
+    } else {
+      if ($low[i] < lowest)   { thattime = $time[i];    lowest = $low[i]; }
+      else if ($high[i] > lowest + (highest - lowest) * percent / 100) {
+        isUp = true;            time.push(thattime);    zigzag.push(lowest);    highest = $high[i];
+      }
+    }
+  }
+  return { time : time, price : zigzag };
+}
 
 // ThAW's own algorithm: 2020-05-13
 
