@@ -30,7 +30,7 @@ import { bb } from './overlays';
 
 /* Indicators */
 
-// Accumulation Distribution - Created by Larry Williams
+// Accumulation / Distribution - Created by Larry Williams
 // AD is an (open) volume indicator
 // AD = (close - open) / (high - low) * volume
 
@@ -414,12 +414,82 @@ export function stoch(
 	};
 }
 
-// export function stochRsi($close: number[], window = 14, signal = 3, smooth = 1): any {
-// 	return;
-// }
+export function stochRsi(
+	$close: number[],
+	window = 14,
+	signal = 3,
+	smooth = 1
+): any {
+	const _rsi = rsi($close, window);
+	const extreme = rolling(
+		(s: Array<number>) => {
+			return { low: Math.min(...s), high: Math.max(...s) };
+		},
+		_rsi,
+		window
+	);
+	let K = pointwise(
+		(rsi: number, e: any) => (rsi - e.low) / (e.high - e.low),
+		_rsi,
+		extreme
+	);
 
-// export function vi($high: number[], $low: number[], $close: number[], window = 14): any {
-// }
+	K[0] = 0;
+
+	if (smooth > 1) {
+		K = sma(K, smooth);
+	}
+
+	return {
+		line: K,
+		signal: sma(K, signal)
+	};
+}
+
+export function vi(
+	$high: number[],
+	$low: number[],
+	$close: number[],
+	window = 14
+): any {
+	const pv = [($high[0] - $low[0]) / 2];
+	const nv = [pv[0]];
+
+	for (let i = 1, len = $high.length; i < len; i++) {
+		pv.push(Math.abs($high[i] - $low[i - 1]));
+		nv.push(Math.abs($high[i - 1] - $low[i]));
+	}
+
+	const apv = rolling(
+		(s: Array<number>) =>
+			s.reduce((sum: number, x: number) => {
+				return sum + x;
+			}, 0),
+		pv,
+		window
+	);
+	const anv = rolling(
+		(s: Array<number>) =>
+			s.reduce((sum: number, x: number) => {
+				return sum + x;
+			}, 0),
+		nv,
+		window
+	);
+	const atr = rolling(
+		(s: Array<number>) =>
+			s.reduce((sum: number, x: number) => {
+				return sum + x;
+			}, 0),
+		trueRange($high, $low, $close),
+		window
+	);
+
+	return {
+		plus: pointwise((a: number, b: number) => a / b, apv, atr),
+		minus: pointwise((a: number, b: number) => a / b, anv, atr)
+	};
+}
 
 // Volume-Weighted Moving Average
 
