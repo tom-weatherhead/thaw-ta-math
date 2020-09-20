@@ -4,8 +4,11 @@ import {
 	cascade,
 	createNaNArray,
 	pointwise,
-	rolling
+	rolling,
+	sum
 } from 'thaw-common-utilities.ts';
+
+import * as thawMacd from 'thaw-macd';
 
 import {
 	add,
@@ -20,7 +23,6 @@ import {
 	sma,
 	// stdev,
 	subtract,
-	sum,
 	trueRange,
 	typicalPrice,
 	wilderSmooth
@@ -263,12 +265,21 @@ export function macd(
 	winlong = 26,
 	winsig = 9
 ): Record<string, number[]> {
-	const line = pointwise(
-		subtract,
-		ema($close, winshort),
-		ema($close, winlong)
+	// const line = pointwise(
+	// 	subtract,
+	// 	ema($close, winshort),
+	// 	ema($close, winlong)
+	// );
+	// const signal = ema(line, winsig);
+
+	const [line, signal] = thawMacd.macd(
+		$close,
+		winshort,
+		winlong,
+		winsig,
+		true
 	);
-	const signal = ema(line, winsig);
+
 	const hist = pointwise(subtract, line, signal);
 
 	return {
@@ -427,7 +438,7 @@ export function stochRsi(
 ): Record<string, number[]> {
 	const _rsi = rsi($close, window);
 	const extreme = rolling(
-		(s: Array<number>) => {
+		(s: number[]) => {
 			return { low: Math.min(...s), high: Math.max(...s) };
 		},
 		_rsi,
@@ -468,7 +479,7 @@ export function vi(
 	}
 
 	const apv = rolling(
-		(s: Array<number>) =>
+		(s: number[]) =>
 			s.reduce((sum: number, x: number) => {
 				return sum + x;
 			}, 0),
@@ -476,7 +487,7 @@ export function vi(
 		window
 	);
 	const anv = rolling(
-		(s: Array<number>) =>
+		(s: number[]) =>
 			s.reduce((sum: number, x: number) => {
 				return sum + x;
 			}, 0),
@@ -484,7 +495,7 @@ export function vi(
 		window
 	);
 	const atr = rolling(
-		(s: Array<number>) =>
+		(s: number[]) =>
 			s.reduce((sum: number, x: number) => {
 				return sum + x;
 			}, 0),

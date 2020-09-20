@@ -1,12 +1,19 @@
 /* Basic math */
 
 import {
-	cascade,
-	createArrayFromElement,
+	// cascade,
+	correlationCoefficient,
+	covariance,
+	// createArrayFromElement,
 	createNaNArray,
+	mean,
 	pointwise,
-	rolling
+	rolling,
+	standardDeviation,
+	sum
 } from 'thaw-common-utilities.ts';
+
+import * as thawMacd from 'thaw-macd';
 
 export function add(a: number, b: number): number {
 	return a + b;
@@ -24,49 +31,55 @@ export function safeDivide(a: number, b: number): number {
 	return !b ? NaN : a / b;
 }
 
-function square(a: number): number {
-	return a * a;
-}
+// function square(a: number): number {
+// 	return a * a;
+// }
 
-export function sum(series: number[]): number {
-	return series.reduce(add, 0);
-}
+// export function sum(series: number[]): number {
+// 	return series.reduce(add, 0);
+// }
 
-export function mean(series: number[]): number {
-	return series.length ? sum(series) / series.length : NaN;
-}
+// export function mean(series: number[]): number {
+// 	return series.length ? sum(series) / series.length : NaN;
+// }
 
 // Standard deviation?
 
 export function sd(series: number[]): number {
-	const E = mean(series);
-	const E2 = mean(pointwise(square, series));
+	// const E = mean(series);
+	// const E2 = mean(pointwise(square, series));
 
-	return Math.sqrt(E2 - E * E);
+	// return Math.sqrt(E2 - E * E);
+
+	return standardDeviation(series);
 }
 
 // Covariance
 
 export function cov(f: number[], g: number[]): number {
-	const Ef = mean(f);
-	const Eg = mean(g);
-	const Efg = mean(pointwise(multiply, f, g));
+	// const Ef = mean(f);
+	// const Eg = mean(g);
+	// const Efg = mean(pointwise(multiply, f, g));
 
-	return Efg - Ef * Eg;
+	// return Efg - Ef * Eg;
+
+	return covariance(f, g);
 }
 
 // Correlation coefficient
 
 export function cor(f: number[], g: number[]): number {
-	const Ef = mean(f);
-	const Eg = mean(g);
-	const Ef2 = mean(pointwise(square, f));
-	const Eg2 = mean(pointwise(square, g));
-	const Efg = mean(pointwise(multiply, f, g));
+	// const Ef = mean(f);
+	// const Eg = mean(g);
+	// const Ef2 = mean(pointwise(square, f));
+	// const Eg2 = mean(pointwise(square, g));
+	// const Efg = mean(pointwise(multiply, f, g));
 
-	// Note that the numerator is cov(f, g)
+	// // Note that the numerator is cov(f, g)
 
-	return (Efg - Ef * Eg) / Math.sqrt((Ef2 - Ef * Ef) * (Eg2 - Eg * Eg));
+	// return (Efg - Ef * Eg) / Math.sqrt((Ef2 - Ef * Ef) * (Eg2 - Eg * Eg));
+
+	return correlationCoefficient(f, g);
 }
 
 export function mad(array: number[]): number {
@@ -122,11 +135,15 @@ export function sma(series: number[], window: number): number[] {
 
 // Exponential moving average
 
+// Original implementation:
+// If start is truthy, use it as the seed of the EMA calculation
+// Else, use mean(series.slice(0, window)) as the seed. (But then series[i] ... series[window - 1] are use twice in the overall calculation)
+
 export function ema(
-	array: number[],
-	period: number,
-	// start?: number
-	seedLength = 1
+	array: number[], // was series
+	period: number, // was window
+	start?: number
+	// seedLength = 1
 ): number[] {
 	// Original implementation:
 
@@ -148,41 +165,43 @@ export function ema(
 
 	// ThAW's implementation:
 
-	const isNumber = (n: unknown): boolean =>
-		typeof n === 'number' && !Number.isNaN(n) && Number.isFinite(n);
-	const alpha = 2 / (period + 1); // The smoothing constant (Appel p. 134)
-	let i = array.findIndex(isNumber);
+	// const isNumber = (n: unknown): boolean =>
+	// 	typeof n === 'number' && !Number.isNaN(n) && Number.isFinite(n);
+	// const alpha = 2 / (period + 1); // The smoothing constant (Appel p. 134)
+	// let i = array.findIndex(isNumber);
 
-	if (i < 0) {
-		i = array.length;
-	}
+	// if (i < 0) {
+	// 	i = array.length;
+	// }
 
-	const j = Math.min(i + seedLength - 1, array.length);
+	// const j = Math.min(i + seedLength - 1, array.length);
 
-	i = Math.max(i, j);
+	// i = Math.max(i, j);
 
-	const resultArray = createArrayFromElement(NaN, i);
-	// meanValue is the initial value which stabilizes the exponential average.
-	// It is the simple average of the first seedLength values in the array,
-	// after skipping any initial run of invalid values (e.g. NaN)
-	// See the section 'Stabilizing the Exponential Average' (Appel p. 136)
-	const meanValue = mean(
-		array.slice(i + 1 - seedLength, i + 1).filter(isNumber)
-	);
+	// const resultArray = createArrayFromElement(NaN, i);
+	// // meanValue is the initial value which stabilizes the exponential average.
+	// // It is the simple average of the first seedLength values in the array,
+	// // after skipping any initial run of invalid values (e.g. NaN)
+	// // See the section 'Stabilizing the Exponential Average' (Appel p. 136)
+	// const meanValue = mean(
+	// 	array.slice(i + 1 - seedLength, i + 1).filter(isNumber)
+	// );
 
-	return resultArray
-		.concat(
-			[meanValue],
-			cascade(
-				(seedValue: number, element: number) =>
-					!isNumber(seedValue)
-						? element
-						: alpha * element + (1 - alpha) * seedValue,
-				meanValue,
-				array.slice(i + 1)
-			)
-		)
-		.slice(0, array.length);
+	// return resultArray
+	// 	.concat(
+	// 		[meanValue],
+	// 		cascade(
+	// 			(seedValue: number, element: number) =>
+	// 				!isNumber(seedValue)
+	// 					? element
+	// 					: alpha * element + (1 - alpha) * seedValue,
+	// 			meanValue,
+	// 			array.slice(i + 1)
+	// 		)
+	// 	)
+	// 	.slice(0, array.length);
+
+	return thawMacd.ema(array, period, start ? start : period);
 }
 
 // Rolling standard deviation?
