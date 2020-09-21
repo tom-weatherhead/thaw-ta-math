@@ -1,6 +1,7 @@
 /* Basic math */
 
 import {
+	arraySum,
 	// cascade,
 	correlationCoefficient,
 	covariance,
@@ -9,11 +10,11 @@ import {
 	mean,
 	pointwise,
 	rolling,
-	standardDeviation,
-	sum
+	standardDeviation // ,
+	// sum
 } from 'thaw-common-utilities.ts';
 
-import * as thawMacd from 'thaw-macd';
+// import * as thawMacd from 'thaw-macd';
 
 export function add(a: number, b: number): number {
 	return a + b;
@@ -35,9 +36,15 @@ export function safeDivide(a: number, b: number): number {
 // 	return a * a;
 // }
 
-// export function sum(series: number[]): number {
-// 	return series.reduce(add, 0);
-// }
+// NOTE BENE: In common-utilities.ts, sum is:
+// function sum(...arg: unknown[]): number { ... }
+// Notice the presence vs. absence of the spread operator.
+
+export function sum(series: number[]): number {
+	// return series.reduce(add, 0);
+
+	return arraySum(series);
+}
 
 // export function mean(series: number[]): number {
 // 	return series.length ? sum(series) / series.length : NaN;
@@ -139,27 +146,33 @@ export function sma(series: number[], window: number): number[] {
 // If start is truthy, use it as the seed of the EMA calculation
 // Else, use mean(series.slice(0, window)) as the seed. (But then series[i] ... series[window - 1] are use twice in the overall calculation)
 
+// ThAW:
+// export function ema(
+// 	array: number[],
+// 	period: number,
+// 	seedLength = 1
+// ): number[] { ... }
+
 export function ema(
-	array: number[], // was series
-	period: number, // was window
+	series: number[],
+	window: number,
 	start?: number
-	// seedLength = 1
 ): number[] {
 	// Original implementation:
 
-	// const weight = 2 / (window + 1);
-	// const result = [start ? start : mean(series.slice(0, window))];
-	// // TODO: const result = [start || mean(series.slice(0, window))];
+	const weight = 2 / (window + 1);
+	const result = [start ? start : mean(series.slice(0, window))];
+	// TODO: const result = [start || mean(series.slice(0, window))];
 
-	// for (let i = 1, len = series.length; i < len; i++) {
-	// 	if (Number.isNaN(result[i - 1])) {
-	// 		result.push(series[i]);
-	// 	} else {
-	// 		result.push(weight * series[i] + (1 - weight) * result[i - 1]);
-	// 	}
-	// }
+	for (let i = 1, len = series.length; i < len; i++) {
+		if (Number.isNaN(result[i - 1])) {
+			result.push(series[i]);
+		} else {
+			result.push(weight * series[i] + (1 - weight) * result[i - 1]);
+		}
+	}
 
-	// return result;
+	return result;
 
 	// ----
 
@@ -201,7 +214,7 @@ export function ema(
 	// 	)
 	// 	.slice(0, array.length);
 
-	return thawMacd.ema(array, period, start ? start : period);
+	// return thawMacd.ema(array, period, start ? start : period);
 }
 
 // Rolling standard deviation?
@@ -240,19 +253,29 @@ export function atr(
 }
 
 export function wilderSmooth(series: number[], window: number): number[] {
-	// const result = new Array(window).fill(NaN);
-	const result = createNaNArray(window);
+	console.log('wilderSmooth() series:', series);
+	console.log('wilderSmooth() window:', window);
 
-	// result.push(
-	// 	series.slice(1, window + 1).reduce((sum, item) => {
-	// 		return (sum += item);
-	// 	}, 0)
-	// );
-	result.push(sum(series.slice(1, window + 1)));
+	// ThAW 2020-09-20: Either this commented-out code of mine:
+	const result = new Array(window).fill(NaN);
+	// const result = createNaNArray(window);
+
+	// or this:
+	result.push(
+		series.slice(1, window + 1).reduce((summ, item) => {
+			return (summ += item);
+		}, 0)
+	);
+	// result.push(sum(series.slice(1, window + 1)));
+
+	// breaks the wilderSmooth() function; a string gets pushed by
+	// the result.push() call above.
 
 	for (let i = window + 1; i < series.length; i++) {
 		result.push((1 - 1 / window) * result[i - 1] + series[i]);
 	}
+
+	console.log('wilderSmooth() result:', result);
 
 	return result;
 }
@@ -279,6 +302,10 @@ export function trueRange(
 ): number[] {
 	const tr = [$high[0] - $low[0]];
 
+	console.log('trueRange() $high:', $high);
+	console.log('trueRange() $low:', $low);
+	console.log('trueRange() $close:', $close);
+
 	for (let i = 1, len = $low.length; i < len; i++) {
 		tr.push(
 			Math.max(
@@ -288,6 +315,8 @@ export function trueRange(
 			)
 		);
 	}
+
+	console.log('trueRange() result:', tr);
 
 	return tr;
 }

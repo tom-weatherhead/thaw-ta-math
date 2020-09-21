@@ -4,11 +4,11 @@ import {
 	cascade,
 	createNaNArray,
 	pointwise,
-	rolling,
-	sum
+	rolling // ,
+	// sum
 } from 'thaw-common-utilities.ts';
 
-import * as thawMacd from 'thaw-macd';
+// import * as thawMacd from 'thaw-macd';
 
 import {
 	add,
@@ -23,6 +23,7 @@ import {
 	sma,
 	// stdev,
 	subtract,
+	sum,
 	trueRange,
 	typicalPrice,
 	wilderSmooth
@@ -35,13 +36,25 @@ interface IExtrema {
 	low: number;
 }
 
+export interface IAdxResult {
+	dip: number[];
+	dim: number[];
+	adx: number[];
+}
+
 /* Indicators */
 
 // Accumulation / Distribution - Created by Larry Williams
+// (ADL = Accumulation / Distribution Line)
 // AD is an (open) volume indicator
 // AD = (close - open) / (high - low) * volume
 
-export function ad(
+// Bollinger: Table 18.4, p. 151: Formula for Normalizing Volume Oscillators:
+// (10-Day normalized Accumulation Distribution oscillator)
+// = 10-day sum of [(close - open) / (high - low) * volume] / 10-day sum of volume
+// Note that (close - open) / (high - low) * volume is the Accumulation Distribution indicator
+
+export function adBollinger(
 	$open: number[],
 	$high: number[],
 	$low: number[],
@@ -84,7 +97,7 @@ export function adl(
 	return result;
 }
 
-// Average Directional Index (by Wilder)
+// Average Directional Index (by Wilder) - Indicates the strength of a trend
 
 // Wilder: A strong trend is present when ADX > 25,
 // and no trend is present when ADX < 20.
@@ -94,7 +107,12 @@ export function adx(
 	$low: number[],
 	$close: number[],
 	window = 14
-): Record<string, number[]> {
+): IAdxResult {
+	// console.log('adx: $high is', $high);
+	// console.log('adx: $low is', $low);
+	// console.log('adx: $close is', $close);
+	// console.log('adx: window is', window);
+
 	let dmp = [0];
 	let dmm = [0];
 
@@ -106,27 +124,35 @@ export function adx(
 		dmm.push(ld > hd ? Math.max(ld, 0) : 0);
 	}
 
+	// console.log('adx: dmp (1) is', dmp);
+	// console.log('adx: dmm (1) is', dmm);
+
 	const str = wilderSmooth(trueRange($high, $low, $close), window);
+
+	// console.log('adx: str is', str);
 
 	dmp = wilderSmooth(dmp, window);
 	dmm = wilderSmooth(dmm, window);
 
+	// console.log('adx: dmp (2) is', dmp);
+	// console.log('adx: dmm (2) is', dmm);
+
 	const fn = (a: number, b: number) => (100 * a) / b;
 	const dip = pointwise(fn, dmp, str);
 	const dim = pointwise(fn, dmm, str);
-
 	const dx = pointwise(
 		(a: number, b: number) => (100 * Math.abs(a - b)) / (a + b),
 		dip,
 		dim
 	);
+	const adx = createNaNArray(14).concat(ema(dx.slice(14), 2 * window - 1));
 
-	return {
-		dip,
-		dim,
-		dx,
-		adx: createNaNArray(14).concat(ema(dx.slice(14), 2 * window - 1))
-	};
+	// console.log('adx: dip is', dip);
+	// console.log('adx: dim is', dim);
+	// console.log('adx: dx is', dx);
+	// console.log('adx: adx is', adx);
+
+	return { dip, dim, adx };
 }
 
 // Bollinger Bands:
@@ -248,11 +274,9 @@ export function kst(
 		rcma3,
 		rcma4
 	);
+	const signal = sma(line, sig);
 
-	return {
-		line,
-		signal: sma(line, sig)
-	};
+	return { line, signal };
 }
 
 // Moving Average Convergence Divergence - Created by Gerald Appel
@@ -265,20 +289,20 @@ export function macd(
 	winlong = 26,
 	winsig = 9
 ): Record<string, number[]> {
-	// const line = pointwise(
-	// 	subtract,
-	// 	ema($close, winshort),
-	// 	ema($close, winlong)
-	// );
-	// const signal = ema(line, winsig);
-
-	const [line, signal] = thawMacd.macd(
-		$close,
-		winshort,
-		winlong,
-		winsig,
-		true
+	const line = pointwise(
+		subtract,
+		ema($close, winshort),
+		ema($close, winlong)
 	);
+	const signal = ema(line, winsig);
+
+	// const [line, signal] = thawMacd.macd(
+	// 	$close,
+	// 	winshort,
+	// 	winlong,
+	// 	winsig,
+	// 	true
+	// );
 
 	const hist = pointwise(subtract, line, signal);
 
@@ -306,9 +330,17 @@ export function mfi(
 	$volume: number[],
 	window = 14
 ): number[] {
+	// console.log('mfi: $high is', $high);
+	// console.log('mfi: $low is', $low);
+	// console.log('mfi: $close is', $close);
+	// console.log('mfi: $volume is', $volume);
+	// console.log('mfi: window is', window);
+
 	let pmf = [0];
 	let nmf = [0];
 	const tp = typicalPrice($high, $low, $close);
+
+	console.log('mfi: tp is', tp);
 
 	for (let i = 1, len = $close.length; i < len; i++) {
 		const diff = tp[i] - tp[i - 1];
@@ -317,14 +349,80 @@ export function mfi(
 		nmf.push(diff < 0 ? tp[i] * $volume[i] : 0);
 	}
 
+	console.log('mfi: pmf (1) is', pmf);
+	console.log('mfi: nmf (1) is', nmf);
+
+	// Original code:
+	// pmf = rolling(
+	// 	(s: Array<number>) =>
+	// 		s.reduce((sum: number, x: number) => {
+	// 			return sum + x;
+	// 		}, 0),
+	// 	pmf,
+	// 	window
+	// );
+	// nmf = rolling(
+	// 	(s: Array<number>) =>
+	// 		s.reduce((sum: number, x: number) => {
+	// 			return sum + x;
+	// 		}, 0),
+	// 	nmf,
+	// 	window
+	// );
+	// ThAW's code:
+	// pmf = sma(pmf, window);
 	pmf = rolling(sum, pmf, window);
+	// nmf = sma(nmf, window);
 	nmf = rolling(sum, nmf, window);
 
-	return pointwise(
+	// const sss = (s: Array<number>) =>
+	// 	s.reduce((sum: number, x: number) => {
+	// 		return sum + x;
+	// 	}, 0);
+	// const sss = sum;
+	// const fnAddition = (a: number, b: number): number => a + b;
+	// const additiveIdentity = 0;
+
+	// const removeNonNumbers = (arg: unknown[]): number[] => {
+	// 	// return arg.map((o) => o as number).filter((o) => o !== undefined);
+
+	// 	return arg
+	// 		.filter((o) => typeof o === 'number')
+	// 		.map((o): number => o as number)
+	// 		.filter((n) => !Number.isNaN(n));
+	// };
+
+	// const summm = (...arg: unknown[]): number => {
+	// 	return removeNonNumbers(arg).reduce(fnAddition, additiveIdentity);
+	// };
+
+	// const sss = (...arg: unknown[]): number => arg.reduce(fnAddition, additiveIdentity);
+
+	// NOTE BENE: Notice the presence vs. absence of the spread operator:
+
+	// const sss = (...arg: number[]): number =>
+	// 	arg.reduce(fnAddition, additiveIdentity);
+
+	// const sss = (arg: number[]): number =>
+	// 	arg.reduce(fnAddition, additiveIdentity);
+
+	// const sss = (arg: unknown[]): number => summm(...arg);
+
+	// pmf = rolling(sss, pmf, window);
+	// nmf = rolling(sss, nmf, window);
+
+	console.log('mfi: pmf (2) is', pmf);
+	console.log('mfi: nmf (2) is', nmf);
+
+	const result = pointwise(
 		(a: number, b: number) => 100 - 100 / (1 + a / b),
 		pmf,
 		nmf
 	);
+
+	console.log('mfi: result is', result);
+
+	return result;
 }
 
 // On-Balance Volume
