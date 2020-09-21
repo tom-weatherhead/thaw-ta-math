@@ -1,8 +1,12 @@
 // indicators.ts
 
 import {
+	arraySum,
 	cascade,
 	createNaNArray,
+	// generateNonNegativeIntegersLessThan,
+	max,
+	min,
 	pointwise,
 	rolling // ,
 	// sum
@@ -23,7 +27,7 @@ import {
 	sma,
 	// stdev,
 	subtract,
-	sum,
+	// sum,
 	trueRange,
 	typicalPrice,
 	wilderSmooth
@@ -42,12 +46,26 @@ export interface IAdxResult {
 	adx: number[];
 }
 
+export interface IViResult {
+	plus: number[];
+	minus: number[];
+}
+
 /* Indicators */
 
-// Accumulation / Distribution - Created by Larry Williams
+// AD (or ADL) : Accumulation / Distribution Line
+// - Created by (Larry Williams?)
+// - Created by Marc Chaikin
+
+// AD is an (open) volume indicator
+// See https://www.tradingview.com/support/solutions/43000501770-accumulation-distribution-adl/
+
+// f(i) = (volume[i] * ((close[i] - low[i]) - (high[i] - close[i]))) / (high[i] - low[i])
+// AD[] = f(0); AD[i] = AD[i - 1] + f(i)
+
 // (ADL = Accumulation / Distribution Line)
 // AD is an (open) volume indicator
-// AD = (close - open) / (high - low) * volume
+// According to Bollinger: AD = (close - open) / (high - low) * volume
 
 // Bollinger: Table 18.4, p. 151: Formula for Normalizing Volume Oscillators:
 // (10-Day normalized Accumulation Distribution oscillator)
@@ -77,22 +95,53 @@ export function adBollinger(
 	return pointwise(fn, $open, $high, $low, $close, $volume);
 }
 
+// Chaikin's ADL
+
 export function adl(
 	$high: number[],
 	$low: number[],
 	$close: number[],
 	$volume: number[]
 ): number[] {
-	const fn = (x: number) =>
-		($volume[x] * (2 * $close[x] - $low[x] - $high[x])) /
-		($high[x] - $low[x]);
-	// const result = [$volume[0] * (2*$close[0] - $low[0] - $high[0]) / ($high[0] - $low[0])];
-	const result = [fn(0)];
+	// console.log('adl: $high is', $high);
+	// console.log('adl: $low is', $low);
+	// console.log('adl: $close is', $close);
+	// console.log('adl: window is', window);
 
-	for (let i = 1, len = $high.length; i < len; i++) {
-		// result[i] = result[i - 1] + $volume[i] * (2*$close[i] - $low[i] - $high[i]) / ($high[i] - $low[i]);
-		result[i] = result[i - 1] + fn(i);
-	}
+	// const fn = (x: number) =>
+	// 	($volume[x] * (2 * $close[x] - $low[x] - $high[x])) /
+	// 	($high[x] - $low[x]);
+	const fn = (h: number, l: number, c: number, v: number) =>
+		safeDivide(v * (2 * c - l - h), h - l);
+
+	// const result = [$volume[0] * (2*$close[0] - $low[0] - $high[0]) / ($high[0] - $low[0])];
+
+	// const result = [fn(0)];
+
+	// for (let i = 1, len = $high.length; i < len; i++) {
+	// 	// result[i] = result[i - 1] + $volume[i] * (2*$close[i] - $low[i] - $high[i]) / ($high[i] - $low[i]);
+	// 	// result[i] = result[i - 1] + fn(i);
+	// 	result.push(result[i - 1] + fn(i));
+
+	// 	// ThAW: Use cascade() ?
+	// }
+
+	// const result = cascade(
+	// 	(seed: number, i: number) => seed + fn(i),
+	// 	0,
+	// 	generateNonNegativeIntegersLessThan($high.length)
+	// );
+	const result = cascade(
+		(seed: number, h: number, l: number, c: number, v: number) =>
+			seed + fn(h, l, c, v),
+		0,
+		$high,
+		$low,
+		$close,
+		$volume
+	);
+
+	// console.log('adl: result is', result);
 
 	return result;
 }
@@ -340,7 +389,7 @@ export function mfi(
 	let nmf = [0];
 	const tp = typicalPrice($high, $low, $close);
 
-	console.log('mfi: tp is', tp);
+	// console.log('mfi: tp is', tp);
 
 	for (let i = 1, len = $close.length; i < len; i++) {
 		const diff = tp[i] - tp[i - 1];
@@ -349,70 +398,15 @@ export function mfi(
 		nmf.push(diff < 0 ? tp[i] * $volume[i] : 0);
 	}
 
-	console.log('mfi: pmf (1) is', pmf);
-	console.log('mfi: nmf (1) is', nmf);
+	// console.log('mfi: pmf (1) is', pmf);
+	// console.log('mfi: nmf (1) is', nmf);
 
-	// Original code:
-	// pmf = rolling(
-	// 	(s: Array<number>) =>
-	// 		s.reduce((sum: number, x: number) => {
-	// 			return sum + x;
-	// 		}, 0),
-	// 	pmf,
-	// 	window
-	// );
-	// nmf = rolling(
-	// 	(s: Array<number>) =>
-	// 		s.reduce((sum: number, x: number) => {
-	// 			return sum + x;
-	// 		}, 0),
-	// 	nmf,
-	// 	window
-	// );
 	// ThAW's code:
-	// pmf = sma(pmf, window);
-	pmf = rolling(sum, pmf, window);
-	// nmf = sma(nmf, window);
-	nmf = rolling(sum, nmf, window);
+	pmf = rolling(arraySum, pmf, window);
+	nmf = rolling(arraySum, nmf, window);
 
-	// const sss = (s: Array<number>) =>
-	// 	s.reduce((sum: number, x: number) => {
-	// 		return sum + x;
-	// 	}, 0);
-	// const sss = sum;
-	// const fnAddition = (a: number, b: number): number => a + b;
-	// const additiveIdentity = 0;
-
-	// const removeNonNumbers = (arg: unknown[]): number[] => {
-	// 	// return arg.map((o) => o as number).filter((o) => o !== undefined);
-
-	// 	return arg
-	// 		.filter((o) => typeof o === 'number')
-	// 		.map((o): number => o as number)
-	// 		.filter((n) => !Number.isNaN(n));
-	// };
-
-	// const summm = (...arg: unknown[]): number => {
-	// 	return removeNonNumbers(arg).reduce(fnAddition, additiveIdentity);
-	// };
-
-	// const sss = (...arg: unknown[]): number => arg.reduce(fnAddition, additiveIdentity);
-
-	// NOTE BENE: Notice the presence vs. absence of the spread operator:
-
-	// const sss = (...arg: number[]): number =>
-	// 	arg.reduce(fnAddition, additiveIdentity);
-
-	// const sss = (arg: number[]): number =>
-	// 	arg.reduce(fnAddition, additiveIdentity);
-
-	// const sss = (arg: unknown[]): number => summm(...arg);
-
-	// pmf = rolling(sss, pmf, window);
-	// nmf = rolling(sss, nmf, window);
-
-	console.log('mfi: pmf (2) is', pmf);
-	console.log('mfi: nmf (2) is', nmf);
+	// console.log('mfi: pmf (2) is', pmf);
+	// console.log('mfi: nmf (2) is', nmf);
 
 	const result = pointwise(
 		(a: number, b: number) => 100 - 100 / (1 + a / b),
@@ -420,7 +414,7 @@ export function mfi(
 		nmf
 	);
 
-	console.log('mfi: result is', result);
+	// console.log('mfi: result is', result);
 
 	return result;
 }
@@ -509,8 +503,10 @@ export function stoch(
 	signal = 3,
 	smooth = 1
 ): Record<string, number[]> {
-	const lowest = rolling((s: number[]) => Math.min(...s), $low, window);
-	const highest = rolling((s: number[]) => Math.max(...s), $high, window);
+	// const lowest = rolling((s: number[]) => Math.min(...s), $low, window);
+	const lowest = rolling(min, $low, window);
+	// const highest = rolling((s: number[]) => Math.max(...s), $high, window);
+	const highest = rolling(max, $high, window);
 	let k = pointwise(
 		(h: number, l: number, c: number) => (100 * (c - l)) / (h - l),
 		highest,
@@ -562,12 +558,23 @@ export function stochRsi(
 	};
 }
 
+// Vortex Indicator
+// Created by Etienne Botes and Douglas Siepman
+// Colour the 'plus' line green and the 'minus' line red.
+
+// An uptrend or buy signal occurs when VI+ is below VI- and then crosses
+// above VI- to take the top position among the trendlines. A downtrend or
+// sell signal occurs when VI- is below VI+ and crosses above VI+ to take
+// the top position among the trendlines. Overall, the trendline in the top
+// position generally dictates whether the security is in an uptrend
+// or downtrend.
+
 export function vi(
 	$high: number[],
 	$low: number[],
 	$close: number[],
 	window = 14
-): Record<string, number[]> {
+): IViResult {
 	const pv = [($high[0] - $low[0]) / 2];
 	const nv = [pv[0]];
 
@@ -576,34 +583,13 @@ export function vi(
 		nv.push(Math.abs($high[i - 1] - $low[i]));
 	}
 
-	const apv = rolling(
-		(s: number[]) =>
-			s.reduce((sum: number, x: number) => {
-				return sum + x;
-			}, 0),
-		pv,
-		window
-	);
-	const anv = rolling(
-		(s: number[]) =>
-			s.reduce((sum: number, x: number) => {
-				return sum + x;
-			}, 0),
-		nv,
-		window
-	);
-	const atr = rolling(
-		(s: number[]) =>
-			s.reduce((sum: number, x: number) => {
-				return sum + x;
-			}, 0),
-		trueRange($high, $low, $close),
-		window
-	);
+	const apv = rolling(arraySum, pv, window);
+	const anv = rolling(arraySum, nv, window);
+	const atr = rolling(arraySum, trueRange($high, $low, $close), window);
 
 	return {
-		plus: pointwise((a: number, b: number) => a / b, apv, atr),
-		minus: pointwise((a: number, b: number) => a / b, anv, atr)
+		plus: pointwise(safeDivide, apv, atr),
+		minus: pointwise(safeDivide, anv, atr)
 	};
 }
 
