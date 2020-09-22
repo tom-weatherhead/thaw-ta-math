@@ -8,11 +8,8 @@ import {
 	max,
 	min,
 	pointwise,
-	rolling // ,
-	// sum
+	rolling
 } from 'thaw-common-utilities.ts';
-
-// import * as thawMacd from 'thaw-macd';
 
 import {
 	add,
@@ -35,10 +32,10 @@ import {
 
 import { bb } from './overlays';
 
-// interface IExtrema {
-// 	high: number;
-// 	low: number;
-// }
+export interface ILineAndSignal {
+	line: number[];
+	signal: number[];
+}
 
 export interface IAdxResult {
 	dip: number[];
@@ -74,30 +71,31 @@ export interface IViResult {
 // Bollinger: Table 18.4, p. 151: Formula for Normalizing Volume Oscillators:
 // (10-Day normalized Accumulation Distribution oscillator)
 // = 10-day sum of [(close - open) / (high - low) * volume] / 10-day sum of volume
-// Note that (close - open) / (high - low) * volume is the Accumulation Distribution indicator
 
-export function adBollinger(
-	$open: number[],
-	$high: number[],
-	$low: number[],
-	$close: number[],
-	$volume: number[]
-): number[] {
-	const fn = (
-		open: number,
-		high: number,
-		low: number,
-		close: number,
-		volume: number
-	): number =>
-		high === low ? 0 : ((close - open) / (high - low)) * volume;
+// adBollinger() is used to smooth Bollinger's volume indicator.
 
-	// Or: (current ad) = (previous ad) + cmfv,
-	// where cmfv = ((close - low) - (high - close)) * volume / (high - low)
-	// See https://www.investopedia.com/terms/a/accumulationdistribution.asp
+// export function adBollinger(
+// 	$open: number[],
+// 	$high: number[],
+// 	$low: number[],
+// 	$close: number[],
+// 	$volume: number[]
+// ): number[] {
+// 	const fn = (
+// 		open: number,
+// 		high: number,
+// 		low: number,
+// 		close: number,
+// 		volume: number
+// 	): number =>
+// 		high === low ? 0 : ((close - open) / (high - low)) * volume;
 
-	return pointwise(fn, $open, $high, $low, $close, $volume);
-}
+// 	// Or: (current ad) = (previous ad) + cmfv,
+// 	// where cmfv = ((close - low) - (high - close)) * volume / (high - low)
+// 	// See https://www.investopedia.com/terms/a/accumulationdistribution.asp
+
+// 	return pointwise(fn, $open, $high, $low, $close, $volume);
+// }
 
 // Chaikin's ADL
 
@@ -107,35 +105,10 @@ export function adl(
 	$close: number[],
 	$volume: number[]
 ): number[] {
-	// console.log('adl: $high is', $high);
-	// console.log('adl: $low is', $low);
-	// console.log('adl: $close is', $close);
-	// console.log('adl: window is', window);
-
-	// const fn = (x: number) =>
-	// 	($volume[x] * (2 * $close[x] - $low[x] - $high[x])) /
-	// 	($high[x] - $low[x]);
 	const fn = (h: number, l: number, c: number, v: number) =>
 		safeDivide(v * (2 * c - l - h), h - l);
 
-	// const result = [$volume[0] * (2*$close[0] - $low[0] - $high[0]) / ($high[0] - $low[0])];
-
-	// const result = [fn(0)];
-
-	// for (let i = 1, len = $high.length; i < len; i++) {
-	// 	// result[i] = result[i - 1] + $volume[i] * (2*$close[i] - $low[i] - $high[i]) / ($high[i] - $low[i]);
-	// 	// result[i] = result[i - 1] + fn(i);
-	// 	result.push(result[i - 1] + fn(i));
-
-	// 	// ThAW: Use cascade() ?
-	// }
-
-	// const result = cascade(
-	// 	(seed: number, i: number) => seed + fn(i),
-	// 	0,
-	// 	generateNonNegativeIntegersLessThan($high.length)
-	// );
-	const result = cascade(
+	return cascade(
 		(seed: number, h: number, l: number, c: number, v: number) =>
 			seed + fn(h, l, c, v),
 		0,
@@ -144,10 +117,6 @@ export function adl(
 		$close,
 		$volume
 	);
-
-	// console.log('adl: result is', result);
-
-	return result;
 }
 
 // Average Directional Index (by Wilder) - Indicates the strength of a trend
@@ -161,11 +130,6 @@ export function adx(
 	$close: number[],
 	window = 14
 ): IAdxResult {
-	// console.log('adx: $high is', $high);
-	// console.log('adx: $low is', $low);
-	// console.log('adx: $close is', $close);
-	// console.log('adx: window is', window);
-
 	let dmp = [0];
 	let dmm = [0];
 
@@ -177,18 +141,10 @@ export function adx(
 		dmm.push(ld > hd ? Math.max(ld, 0) : 0);
 	}
 
-	// console.log('adx: dmp (1) is', dmp);
-	// console.log('adx: dmm (1) is', dmm);
-
 	const str = wilderSmooth(trueRange($high, $low, $close), window);
-
-	// console.log('adx: str is', str);
 
 	dmp = wilderSmooth(dmp, window);
 	dmm = wilderSmooth(dmm, window);
-
-	// console.log('adx: dmp (2) is', dmp);
-	// console.log('adx: dmm (2) is', dmm);
 
 	const fn = (a: number, b: number) => (100 * a) / b;
 	const dip = pointwise(fn, dmp, str);
@@ -199,11 +155,6 @@ export function adx(
 		dim
 	);
 	const adx = createNaNArray(14).concat(ema(dx.slice(14), 2 * window - 1));
-
-	// console.log('adx: dip is', dip);
-	// console.log('adx: dim is', dim);
-	// console.log('adx: dx is', dx);
-	// console.log('adx: adx is', adx);
 
 	return { dip, dim, adx };
 }
@@ -238,6 +189,9 @@ export function bbw($close: number[], window = 20, mult = 2): number[] {
 	);
 }
 
+// Commodity Channel Index - Created by Donald Lambert
+// See https://www.investopedia.com/terms/c/commoditychannelindex.asp
+
 export function cci(
 	$high: number[],
 	$low: number[],
@@ -259,6 +213,9 @@ export function cci(
 	);
 }
 
+// Chaikin Oscillator - Created by Marc Chaikin
+// See https://docs.anychart.com/Stock_Charts/Technical_Indicators/Chaikin_Oscillator_(CHO)
+
 export function cho(
 	$high: number[],
 	$low: number[],
@@ -271,6 +228,8 @@ export function cho(
 
 	return pointwise(subtract, ema(adli, winshort), ema(adli, winlong));
 }
+
+// WTF is this FI?
 
 export function fi(
 	$close: number[],
@@ -303,6 +262,8 @@ export function ii(
 	return pointwise(fn, $high, $low, $close, $volume);
 }
 
+// Know Sure Thing Indicator - Created by Martin Pring
+
 export function kst(
 	$close: number[],
 	w1 = 10,
@@ -314,7 +275,7 @@ export function kst(
 	s3 = 10,
 	s4 = 15,
 	sig = 9
-): Record<string, number[]> {
+): ILineAndSignal {
 	const rcma1 = sma(roc($close, w1), s1);
 	const rcma2 = sma(roc($close, w2), s2);
 	const rcma3 = sma(roc($close, w3), s3);
@@ -349,14 +310,6 @@ export function macd(
 	);
 	const signal = ema(line, winsig);
 
-	// const [line, signal] = thawMacd.macd(
-	// 	$close,
-	// 	winshort,
-	// 	winlong,
-	// 	winsig,
-	// 	true
-	// );
-
 	const hist = pointwise(subtract, line, signal);
 
 	return {
@@ -383,17 +336,9 @@ export function mfi(
 	$volume: number[],
 	window = 14
 ): number[] {
-	// console.log('mfi: $high is', $high);
-	// console.log('mfi: $low is', $low);
-	// console.log('mfi: $close is', $close);
-	// console.log('mfi: $volume is', $volume);
-	// console.log('mfi: window is', window);
-
 	let pmf = [0];
 	let nmf = [0];
 	const tp = typicalPrice($high, $low, $close);
-
-	// console.log('mfi: tp is', tp);
 
 	for (let i = 1, len = $close.length; i < len; i++) {
 		const diff = tp[i] - tp[i - 1];
@@ -402,25 +347,14 @@ export function mfi(
 		nmf.push(diff < 0 ? tp[i] * $volume[i] : 0);
 	}
 
-	// console.log('mfi: pmf (1) is', pmf);
-	// console.log('mfi: nmf (1) is', nmf);
-
-	// ThAW's code:
 	pmf = rolling(arraySum, pmf, window);
 	nmf = rolling(arraySum, nmf, window);
 
-	// console.log('mfi: pmf (2) is', pmf);
-	// console.log('mfi: nmf (2) is', nmf);
-
-	const result = pointwise(
+	return pointwise(
 		(a: number, b: number) => 100 - 100 / (1 + a / b),
 		pmf,
 		nmf
 	);
-
-	// console.log('mfi: result is', result);
-
-	return result;
 }
 
 // On-Balance Volume
@@ -430,29 +364,7 @@ export function obv(
 	$close: number[],
 	$volume: number[],
 	signal = 10
-): Record<string, number[]> {
-	// Original implementation:
-
-	// const result = [0];
-
-	// for (let i = 1, len = $close.length; i < len; i++) {
-	// 	result.push(
-	// 		result[i - 1] + Math.sign($close[i] - $close[i - 1]) * $volume[i]
-	// 	);
-	// }
-
-	// return { line: result, signal: sma(result, signal) };
-
-	// ----
-
-	// ThAW's implementation:
-	// const fn = (previous: number, current: number);
-	// const pairDiffs = cascade(fn, $close[0], $close.slice(1));
-
-	// const seed = 0;
-
-	// return [seed].concat(cascade(fn, seed, $close.slice(1)));
-
+): ILineAndSignal {
 	const array2 = [0].concat($close).slice(0, $close.length);
 	const fn = (a: number, b: number, c: number) => Math.sign(a - b) * c;
 	const array3 = pointwise(fn, $close, array2, $volume).slice(1);
@@ -460,6 +372,9 @@ export function obv(
 
 	return { line: result, signal: sma(result, signal) };
 }
+
+// Price Rate of Change
+// See https://www.investopedia.com/terms/p/pricerateofchange.asp
 
 export function roc($close: number[], window = 14): number[] {
 	const result = new Array(window).fill(NaN);
@@ -499,6 +414,8 @@ export function rsi($close: number[], window = 14): number[] {
 	);
 }
 
+// Stochastic oscillator - Created by Dr. George Lane in the late 1950s
+
 export function stoch(
 	$high: number[],
 	$low: number[],
@@ -507,7 +424,7 @@ export function stoch(
 	signal = 3,
 	smooth = 1,
 	options: IStochOptions = {}
-): Record<string, number[]> {
+): ILineAndSignal {
 	const lowest = rolling(min, $low, window);
 	const highest = rolling(max, $high, window);
 	let k = pointwise(
@@ -531,43 +448,20 @@ export function stoch(
 	};
 }
 
+// Stochastic RSI - Created by Tushar S. Chande and Stanley Kroll (1994)
+// See https://www.investopedia.com/terms/s/stochrsi.asp
+
 export function stochRsi(
 	$close: number[],
 	window = 14,
 	signal = 3,
 	smooth = 1
-): Record<string, number[]> {
+): ILineAndSignal {
 	const _rsi = rsi($close, window);
 
 	return stoch(_rsi, _rsi, _rsi, window, signal, smooth, {
 		zeroKZero: true
 	});
-
-	// const extreme = rolling(
-	// 	(s: number[]) => {
-	// 		return { low: Math.min(...s), high: Math.max(...s) };
-	// 	},
-	// 	_rsi,
-	// 	window
-	// );
-	// let K = pointwise(
-	// 	(rsi: number, e: unknown) =>
-	// 		(rsi - (e as IExtrema).low) /
-	// 		((e as IExtrema).high - (e as IExtrema).low),
-	// 	_rsi,
-	// 	extreme
-	// );
-
-	// K[0] = 0;
-
-	// if (smooth > 1) {
-	// 	K = sma(K, smooth);
-	// }
-
-	// return {
-	// 	line: K,
-	// 	signal: sma(K, signal)
-	// };
 }
 
 // Vortex Indicator
@@ -606,6 +500,7 @@ export function vi(
 }
 
 // Volume-Weighted Moving Average
+// See https://www.tradingsetupsreview.com/volume-weighted-moving-average-vwma/
 
 export function vwma(
 	$close: number[],
@@ -648,6 +543,9 @@ export function vwmacd(
 		hist
 	};
 }
+
+// Williams %R (aka Williams Percent Range) - Created by Larry Williams
+// See https://www.investopedia.com/terms/w/williamsr.asp
 
 export function williams(
 	$high: number[],
