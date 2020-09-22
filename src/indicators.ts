@@ -35,15 +35,19 @@ import {
 
 import { bb } from './overlays';
 
-interface IExtrema {
-	high: number;
-	low: number;
-}
+// interface IExtrema {
+// 	high: number;
+// 	low: number;
+// }
 
 export interface IAdxResult {
 	dip: number[];
 	dim: number[];
 	adx: number[];
+}
+
+export interface IStochOptions {
+	zeroKZero?: boolean;
 }
 
 export interface IViResult {
@@ -501,11 +505,10 @@ export function stoch(
 	$close: number[],
 	window = 14,
 	signal = 3,
-	smooth = 1
+	smooth = 1,
+	options: IStochOptions = {}
 ): Record<string, number[]> {
-	// const lowest = rolling((s: number[]) => Math.min(...s), $low, window);
 	const lowest = rolling(min, $low, window);
-	// const highest = rolling((s: number[]) => Math.max(...s), $high, window);
 	const highest = rolling(max, $high, window);
 	let k = pointwise(
 		(h: number, l: number, c: number) => (100 * (c - l)) / (h - l),
@@ -513,6 +516,10 @@ export function stoch(
 		lowest,
 		$close
 	);
+
+	if (typeof options !== 'undefined' && options.zeroKZero) {
+		k[0] = 0;
+	}
 
 	if (smooth > 1) {
 		k = sma(k, smooth);
@@ -531,31 +538,36 @@ export function stochRsi(
 	smooth = 1
 ): Record<string, number[]> {
 	const _rsi = rsi($close, window);
-	const extreme = rolling(
-		(s: number[]) => {
-			return { low: Math.min(...s), high: Math.max(...s) };
-		},
-		_rsi,
-		window
-	);
-	let K = pointwise(
-		(rsi: number, e: unknown) =>
-			(rsi - (e as IExtrema).low) /
-			((e as IExtrema).high - (e as IExtrema).low),
-		_rsi,
-		extreme
-	);
 
-	K[0] = 0;
+	return stoch(_rsi, _rsi, _rsi, window, signal, smooth, {
+		zeroKZero: true
+	});
 
-	if (smooth > 1) {
-		K = sma(K, smooth);
-	}
+	// const extreme = rolling(
+	// 	(s: number[]) => {
+	// 		return { low: Math.min(...s), high: Math.max(...s) };
+	// 	},
+	// 	_rsi,
+	// 	window
+	// );
+	// let K = pointwise(
+	// 	(rsi: number, e: unknown) =>
+	// 		(rsi - (e as IExtrema).low) /
+	// 		((e as IExtrema).high - (e as IExtrema).low),
+	// 	_rsi,
+	// 	extreme
+	// );
 
-	return {
-		line: K,
-		signal: sma(K, signal)
-	};
+	// K[0] = 0;
+
+	// if (smooth > 1) {
+	// 	K = sma(K, smooth);
+	// }
+
+	// return {
+	// 	line: K,
+	// 	signal: sma(K, signal)
+	// };
 }
 
 // Vortex Indicator

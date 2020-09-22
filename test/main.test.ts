@@ -2,58 +2,58 @@
 
 'use strict';
 
-import * as macdKaelZhang from 'macd';
-import * as d3fc from '@d3fc/d3fc-technical-indicator';
+// import * as macdKaelZhang from 'macd';
+// import * as d3fc from '@d3fc/d3fc-technical-indicator';
 
-// import helloWorld from '../lib/index';
+// // import helloWorld from '../lib/index';
 
-const array1 = [
-	2,
-	3,
-	5,
-	7,
-	11,
-	13,
-	17,
-	19,
-	23,
-	29,
-	31,
-	37,
-	41,
-	43,
-	47,
-	53,
-	59,
-	61,
-	67,
-	71,
+// const array1 = [
+// 	2,
+// 	3,
+// 	5,
+// 	7,
+// 	11,
+// 	13,
+// 	17,
+// 	19,
+// 	23,
+// 	29,
+// 	31,
+// 	37,
+// 	41,
+// 	43,
+// 	47,
+// 	53,
+// 	59,
+// 	61,
+// 	67,
+// 	71,
 
-	2,
-	3,
-	5,
-	7,
-	11,
-	13,
-	17,
-	19,
-	23,
-	29,
-	31,
-	37,
-	41,
-	43,
-	47,
-	53,
-	59,
-	61,
-	67,
-	71
-];
+// 	2,
+// 	3,
+// 	5,
+// 	7,
+// 	11,
+// 	13,
+// 	17,
+// 	19,
+// 	23,
+// 	29,
+// 	31,
+// 	37,
+// 	41,
+// 	43,
+// 	47,
+// 	53,
+// 	59,
+// 	61,
+// 	67,
+// 	71
+// ];
 
-const fast = 12,
-	slow = 26,
-	signal = 9;
+// const fast = 12,
+// 	slow = 26,
+// 	signal = 9;
 
 test('Placeholder test', () => {
 	// Arrange
