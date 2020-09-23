@@ -1,30 +1,21 @@
-// indicators.ts
+// thaw-ta-math/src/indicators.ts
 
 import {
-	arraySum,
 	cascade,
 	createNaNArray,
-	// generateNonNegativeIntegersLessThan,
-	max,
-	min,
 	pointwise,
-	rolling
+	rolling,
+	sum
 } from 'thaw-common-utilities.ts';
 
 import {
 	add,
-	// atr,
 	ema,
-	// expdev,
 	madev,
 	multiply,
-	// pointwise,
-	// rolling,
 	safeDivide,
 	sma,
-	// stdev,
 	subtract,
-	// sum,
 	trueRange,
 	typicalPrice,
 	wilderSmooth
@@ -55,7 +46,6 @@ export interface IViResult {
 /* Indicators */
 
 // AD (or ADL) : Accumulation / Distribution Line
-// - Created by (Larry Williams?)
 // - Created by Marc Chaikin
 
 // AD is an (open) volume indicator
@@ -66,38 +56,6 @@ export interface IViResult {
 
 // (ADL = Accumulation / Distribution Line)
 // AD is an (open) volume indicator
-// According to Bollinger: AD = (close - open) / (high - low) * volume
-
-// Bollinger: Table 18.4, p. 151: Formula for Normalizing Volume Oscillators:
-// (10-Day normalized Accumulation Distribution oscillator)
-// = 10-day sum of [(close - open) / (high - low) * volume] / 10-day sum of volume
-
-// adBollinger() is used to smooth Bollinger's volume indicator.
-
-// export function adBollinger(
-// 	$open: number[],
-// 	$high: number[],
-// 	$low: number[],
-// 	$close: number[],
-// 	$volume: number[]
-// ): number[] {
-// 	const fn = (
-// 		open: number,
-// 		high: number,
-// 		low: number,
-// 		close: number,
-// 		volume: number
-// 	): number =>
-// 		high === low ? 0 : ((close - open) / (high - low)) * volume;
-
-// 	// Or: (current ad) = (previous ad) + cmfv,
-// 	// where cmfv = ((close - low) - (high - close)) * volume / (high - low)
-// 	// See https://www.investopedia.com/terms/a/accumulationdistribution.asp
-
-// 	return pointwise(fn, $open, $high, $low, $close, $volume);
-// }
-
-// Chaikin's ADL
 
 export function adl(
 	$high: number[],
@@ -105,12 +63,12 @@ export function adl(
 	$close: number[],
 	$volume: number[]
 ): number[] {
-	const fn = (h: number, l: number, c: number, v: number) =>
-		safeDivide(v * (2 * c - l - h), h - l);
+	// const fn = (h: number, l: number, c: number, v: number) =>
+	// 	safeDivide(v * (2 * c - l - h), h - l);
 
 	return cascade(
 		(seed: number, h: number, l: number, c: number, v: number) =>
-			seed + fn(h, l, c, v),
+			seed + safeDivide(v * (2 * c - l - h), h - l),
 		0,
 		$high,
 		$low,
@@ -236,7 +194,11 @@ export function fi(
 	$volume: number[],
 	window = 13
 ): number[] {
-	const delta = rolling((s: number[]) => s[s.length - 1] - s[0], $close, 2);
+	const delta = rolling(
+		(...s: number[]) => s[s.length - 1] - s[0],
+		$close,
+		2
+	);
 
 	return ema(pointwise(multiply, delta, $volume), window);
 }
@@ -347,8 +309,8 @@ export function mfi(
 		nmf.push(diff < 0 ? tp[i] * $volume[i] : 0);
 	}
 
-	pmf = rolling(arraySum, pmf, window);
-	nmf = rolling(arraySum, nmf, window);
+	pmf = rolling(sum, pmf, window);
+	nmf = rolling(sum, nmf, window);
 
 	return pointwise(
 		(a: number, b: number) => 100 - 100 / (1 + a / b),
@@ -377,15 +339,13 @@ export function obv(
 // See https://www.investopedia.com/terms/p/pricerateofchange.asp
 
 export function roc($close: number[], window = 14): number[] {
-	const result = new Array(window).fill(NaN);
-
-	for (let i = window, len = $close.length; i < len; i++) {
-		result.push(
-			(100 * ($close[i] - $close[i - window])) / $close[i - window]
-		);
-	}
-
-	return result;
+	return createNaNArray(window).concat(
+		pointwise(
+			(a: number, b: number) => (100 * (a - b)) / b,
+			$close.slice(window),
+			$close.slice(0, $close.length - window)
+		)
+	);
 }
 
 // Relative Strength Index - Created by J. Welles Wilder Jr.
@@ -425,8 +385,8 @@ export function stoch(
 	smooth = 1,
 	options: IStochOptions = {}
 ): ILineAndSignal {
-	const lowest = rolling(min, $low, window);
-	const highest = rolling(max, $high, window);
+	const lowest = rolling(Math.min, $low, window);
+	const highest = rolling(Math.max, $high, window);
 	let k = pointwise(
 		(h: number, l: number, c: number) => (100 * (c - l)) / (h - l),
 		highest,
@@ -489,9 +449,9 @@ export function vi(
 		nv.push(Math.abs($high[i - 1] - $low[i]));
 	}
 
-	const apv = rolling(arraySum, pv, window);
-	const anv = rolling(arraySum, nv, window);
-	const atr = rolling(arraySum, trueRange($high, $low, $close), window);
+	const apv = rolling(sum, pv, window);
+	const anv = rolling(sum, nv, window);
+	const atr = rolling(sum, trueRange($high, $low, $close), window);
 
 	return {
 		plus: pointwise(safeDivide, apv, atr),

@@ -1,3 +1,5 @@
+// thaw-ta-math/src/core.ts
+
 /* Basic math */
 
 import {
@@ -16,11 +18,13 @@ import {
 	standardDeviation
 } from 'thaw-common-utilities.ts';
 
+import { emaCore } from 'thaw-macd';
+
 export const add = fnAddition;
 export const subtract = fnSubtraction;
 export const multiply = fnMultiplication;
 export const safeDivide = fnSafeDivision;
-export const sd = standardDeviation;
+export const sd = (...array: number[]): number => standardDeviation(array);
 export const cov = covariance;
 export const cor = correlationCoefficient;
 
@@ -50,15 +54,6 @@ export function sqrDiff(array1: number[], array2: number[]): number[] {
 }
 
 export function rmse(f: number[], g: number[]): number {
-	// const sqrDiff = pointwise(
-	// 	// TODO: compose(subtract, square) // First subtract, then square
-	// 	(a: number, b: number) => (a - b) * (a - b),
-	// 	f,
-	// 	g
-	// );
-
-	// return f.length !== g.length ? Infinity : Math.sqrt(mean(sqrDiff));
-
 	return f.length !== g.length ? Infinity : Math.sqrt(mean(sqrDiff(f, g)));
 }
 
@@ -81,7 +76,7 @@ export function mape(f: number[], g: number[]): number {
 // Simple moving average
 
 export function sma(series: number[], window: number): number[] {
-	return rolling(mean, series, window);
+	return rolling((...args: number[]) => mean(args), series, window);
 }
 
 // Exponential moving average
@@ -95,33 +90,27 @@ export function ema(
 	window: number,
 	start?: number
 ): number[] {
-	const weight = 2 / (window + 1);
-	// const result = [start ? start : mean(series.slice(0, window))];
-	// TODO: const result = [start || mean(series.slice(0, window))];
+	// const weight = 2 / (window + 1);
 
-	if (!start) {
-		start = mean(series.slice(0, window));
-	}
-
-	// for (let i = 1, len = series.length; i < len; i++) {
-	// 	if (Number.isNaN(result[i - 1])) {
-	// 		result.push(series[i]);
-	// 	} else {
-	// 		result.push(weight * series[i] + (1 - weight) * result[i - 1]);
-	// 	}
+	// if (!start) {
+	// 	start = mean(series.slice(0, window));
 	// }
 
-	// return result;
+	// return [start].concat(
+	// 	cascade(
+	// 		(seedValue: number, element: number): number =>
+	// 			Number.isNaN(seedValue)
+	// 				? element
+	// 				: weight * element + (1 - weight) * seedValue,
+	// 		start,
+	// 		series.slice(1)
+	// 	)
+	// );
 
-	return [start].concat(
-		cascade(
-			(seedValue: number, element: number): number =>
-				Number.isNaN(seedValue)
-					? element
-					: weight * element + (1 - weight) * seedValue,
-			start,
-			series.slice(1)
-		)
+	return emaCore(
+		series.slice(1),
+		window,
+		start || mean(series.slice(0, window))
 	);
 }
 
@@ -132,20 +121,19 @@ export function stdev(series: number[], window: number): number[] {
 }
 
 export function madev(series: number[], window: number): number[] {
-	return rolling(mad, series, window);
+	return rolling((...args: number[]) => mad(args), series, window);
 }
 
 export function expdev(series: number[], window: number): number[] {
-	// const sqrDiff = pointwise(
-	// 	(a: number, b: number) => (a - b) * (a - b),
-	// 	series,
-	// 	ema(series, window)
+	// return pointwise(
+	// 	(x: number) => Math.sqrt(x),
+	// 	ema(sqrDiff(series, ema(series, window)), window)
 	// );
 
-	return pointwise(
-		(x: number) => Math.sqrt(x),
-		ema(sqrDiff(series, ema(series, window)), window)
-	);
+	return ema(
+		sqrDiff(series, ema(series, window)),
+		window
+	).map((x: number) => Math.sqrt(x));
 }
 
 /* J. Welles Wilder Jr.'s functions */
@@ -162,25 +150,6 @@ export function atr(
 }
 
 export function wilderSmooth(series: number[], window: number): number[] {
-	// console.log('wilderSmooth() series:', series);
-	// console.log('wilderSmooth() window:', window);
-
-	// ThAW 2020-09-20: Either this commented-out code of mine:
-	// const result = new Array(window).fill(NaN);
-	// const result = createNaNArray(window);
-
-	// result.push(arraySum(series.slice(1, window + 1)));
-
-	// for (let i = window + 1; i < series.length; i++) {
-	// 	result.push((1 - 1 / window) * result[i - 1] + series[i]);
-	// }
-
-	// // console.log('wilderSmooth() result:', result);
-
-	// return result;
-
-	// ---
-
 	const start = arraySum(series.slice(1, window + 1));
 
 	return createNaNArray(window).concat(

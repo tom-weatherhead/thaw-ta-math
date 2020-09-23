@@ -1,12 +1,12 @@
 // thaw-ta-math/src/overlays.ts
 
 import {
-	arraySum,
 	createNaNArray,
 	fnMultiplication,
 	fnSafeDivision,
 	pointwise,
-	rolling
+	rolling,
+	sum
 } from 'thaw-common-utilities.ts';
 
 import { sma, ema, stdev, expdev, atr, typicalPrice } from './core';
@@ -197,43 +197,9 @@ export function vwma(
 
 	return pointwise(
 		fnSafeDivision,
-		rolling(arraySum, vwprices, window),
-		rolling(arraySum, $volume, window)
+		rolling(sum, vwprices, window),
+		rolling(sum, $volume, window)
 	);
-
-	// const nnn = rolling(arraySum, vwprices, window);
-	// const ddd = rolling(arraySum, $volume, window);
-
-	// console.log('vwma: nnn is', nnn);
-	// console.log('vwma: ddd is', ddd);
-
-	// const fnIsSafeNumber = (arg: unknown): boolean => {
-	// 	return (
-	// 		typeof arg === 'number' &&
-	// 		!Number.isNaN(arg) &&
-	// 		Number.isFinite(arg)
-	// 	);
-	// };
-
-	// const fnSafeDivision = (a: number, b: number, dflt = 0): number => {
-	// 	// return Number.isNaN(a) || !b ? dflt : a / b;
-
-	// 	let result: number;
-
-	// 	try {
-	// 		result = a / b;
-	// 	} catch (error) {
-	// 		result = NaN; // Not a safe number.
-	// 	}
-
-	// 	return fnIsSafeNumber(result) ? result : dflt;
-	// };
-
-	// const result = pointwise(fnSafeDivision, nnn, ddd);
-
-	// console.log('vwma: result is', result);
-
-	// return result;
 }
 
 export function zigzag(
@@ -295,7 +261,6 @@ export function generatePriceFilterOverlay(
 		);
 	}
 
-	// const overlay = new Array(prices.length).fill(NaN);
 	const overlay = createNaNArray(prices.length);
 
 	// 1) Before entering the main loop:

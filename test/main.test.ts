@@ -1,4 +1,4 @@
-// test/main.test.ts
+// thaw-ta-math/test/main.test.ts
 
 'use strict';
 
