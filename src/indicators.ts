@@ -499,23 +499,6 @@ export function vi(
 	};
 }
 
-// Volume-Weighted Moving Average
-// See https://www.tradingsetupsreview.com/volume-weighted-moving-average-vwma/
-
-export function vwma(
-	$close: number[],
-	$volume: number[],
-	window: number
-): number[] {
-	const vwprices = pointwise(multiply, $close, $volume);
-
-	return pointwise(
-		safeDivide,
-		rolling(add, vwprices, window),
-		rolling(add, $volume, window)
-	);
-}
-
 // Volume-Weighted MACD - Created by Buff Dormeier
 // VWMACD is a (closed) volume indicator
 // VWMACD - 12-period volume-weighted average of the last - 26-period volume-weighted average of the last

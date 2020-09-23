@@ -1,6 +1,13 @@
 // thaw-ta-math/src/overlays.ts
 
-import { createNaNArray, pointwise } from 'thaw-common-utilities.ts';
+import {
+	arraySum,
+	createNaNArray,
+	fnMultiplication,
+	fnSafeDivision,
+	pointwise,
+	rolling
+} from 'thaw-common-utilities.ts';
 
 import { sma, ema, stdev, expdev, atr, typicalPrice } from './core';
 
@@ -170,6 +177,65 @@ export function vwap(
 	return pointwise((a: number, b: number) => a / b, cumulVTP, cumulV);
 }
 
+// Volume-Weighted Moving Average
+// See https://www.tradingsetupsreview.com/volume-weighted-moving-average-vwma/
+
+export function vwma(
+	$close: number[],
+	$volume: number[],
+	window = 14
+): number[] {
+	// Note: This works with operator fnMultiplication because
+	// exactly two arrays are passed to pointwise(); it would not work
+	// with some other number of arrays.
+	const vwprices = pointwise(fnMultiplication, $close, $volume);
+
+	// console.log('vwma: $close is', $close);
+	// console.log('vwma: $volume is', $volume);
+	// console.log('vwma: window is', window);
+	// console.log('vwma: vwprices is', vwprices);
+
+	return pointwise(
+		fnSafeDivision,
+		rolling(arraySum, vwprices, window),
+		rolling(arraySum, $volume, window)
+	);
+
+	// const nnn = rolling(arraySum, vwprices, window);
+	// const ddd = rolling(arraySum, $volume, window);
+
+	// console.log('vwma: nnn is', nnn);
+	// console.log('vwma: ddd is', ddd);
+
+	// const fnIsSafeNumber = (arg: unknown): boolean => {
+	// 	return (
+	// 		typeof arg === 'number' &&
+	// 		!Number.isNaN(arg) &&
+	// 		Number.isFinite(arg)
+	// 	);
+	// };
+
+	// const fnSafeDivision = (a: number, b: number, dflt = 0): number => {
+	// 	// return Number.isNaN(a) || !b ? dflt : a / b;
+
+	// 	let result: number;
+
+	// 	try {
+	// 		result = a / b;
+	// 	} catch (error) {
+	// 		result = NaN; // Not a safe number.
+	// 	}
+
+	// 	return fnIsSafeNumber(result) ? result : dflt;
+	// };
+
+	// const result = pointwise(fnSafeDivision, nnn, ddd);
+
+	// console.log('vwma: result is', result);
+
+	// return result;
+}
+
 export function zigzag(
 	$time: number[],
 	$high: number[],
@@ -214,6 +280,8 @@ export function zigzag(
 	}
 	return { time, price: zigzag };
 }
+
+// ****
 
 // ThAW's own algorithm: 2020-05-13
 
