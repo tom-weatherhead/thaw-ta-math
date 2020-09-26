@@ -88,25 +88,41 @@ export function adx(
 	$close: number[],
 	window = 14
 ): IAdxResult {
-	let dmp = [0];
-	let dmm = [0];
+	// let dmp = [0];
+	// let dmm = [0];
 
-	for (let i = 1, len = $low.length; i < len; i++) {
-		const hd = $high[i] - $high[i - 1];
-		const ld = $low[i - 1] - $low[i];
+	// for (let i = 1, len = $low.length; i < len; i++) {
+	// 	const hd = $high[i] - $high[i - 1];
+	// 	const ld = $low[i - 1] - $low[i];
 
-		dmp.push(hd > ld ? Math.max(hd, 0) : 0);
-		dmm.push(ld > hd ? Math.max(ld, 0) : 0);
-	}
+	// 	dmp.push(hd > ld ? Math.max(hd, 0) : 0);
+	// 	dmm.push(ld > hd ? Math.max(ld, 0) : 0);
+	// }
+
+	const highDiffs = pointwise(
+		subtract,
+		$high.slice(1),
+		$high.slice(0, $high.length - 1)
+	);
+	const lowDiffs = pointwise(
+		subtract,
+		$low.slice(0, $low.length - 1),
+		$low.slice(1)
+	);
+	const fn1 = (a: number, b: number) => (a > b ? Math.max(a, 0) : 0);
+	const fn2 = (a: number[], b: number[]) =>
+		[0].concat(pointwise(fn1, a, b));
+	const dmp = wilderSmooth(fn2(highDiffs, lowDiffs), window);
+	const dmm = wilderSmooth(fn2(lowDiffs, highDiffs), window);
 
 	const str = wilderSmooth(trueRange($high, $low, $close), window);
 
-	dmp = wilderSmooth(dmp, window);
-	dmm = wilderSmooth(dmm, window);
+	// dmp = wilderSmooth(dmp, window);
+	// dmm = wilderSmooth(dmm, window);
 
-	const fn = (a: number, b: number) => (100 * a) / b;
-	const dip = pointwise(fn, dmp, str);
-	const dim = pointwise(fn, dmm, str);
+	const fn3 = (a: number, b: number) => (100 * a) / b;
+	const dip = pointwise(fn3, dmp, str);
+	const dim = pointwise(fn3, dmm, str);
 	const dx = pointwise(
 		(a: number, b: number) => (100 * Math.abs(a - b)) / (a + b),
 		dip,
@@ -381,8 +397,8 @@ export function stoch(
 	$low: number[],
 	$close: number[],
 	window = 14,
-	signal = 3,
-	smooth = 1,
+	signal = 3, // %D ?
+	smooth = 1, // %K ?
 	options: IStochOptions = {}
 ): ILineAndSignal {
 	const lowest = rolling(Math.min, $low, window);
@@ -403,8 +419,8 @@ export function stoch(
 	}
 
 	return {
-		line: k,
-		signal: sma(k, signal)
+		line: k, // %K Line ?
+		signal: sma(k, signal) // %D Line ?
 	};
 }
 

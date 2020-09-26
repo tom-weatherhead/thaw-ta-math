@@ -90,23 +90,6 @@ export function ema(
 	window: number,
 	start?: number
 ): number[] {
-	// const weight = 2 / (window + 1);
-
-	// if (!start) {
-	// 	start = mean(series.slice(0, window));
-	// }
-
-	// return [start].concat(
-	// 	cascade(
-	// 		(seedValue: number, element: number): number =>
-	// 			Number.isNaN(seedValue)
-	// 				? element
-	// 				: weight * element + (1 - weight) * seedValue,
-	// 		start,
-	// 		series.slice(1)
-	// 	)
-	// );
-
 	return emaCore(
 		series.slice(1),
 		window,
@@ -125,11 +108,6 @@ export function madev(series: number[], window: number): number[] {
 }
 
 export function expdev(series: number[], window: number): number[] {
-	// return pointwise(
-	// 	(x: number) => Math.sqrt(x),
-	// 	ema(sqrDiff(series, ema(series, window)), window)
-	// );
-
 	return ema(
 		sqrDiff(series, ema(series, window)),
 		window
