@@ -1,21 +1,21 @@
 // thaw-ta-math/src/indicators.ts
 
 import {
+	add,
 	cascade,
 	createNaNArray,
+	multiply,
+	negate,
 	pointwise,
 	rolling,
-	sum
+	safeDivide,
+	subtract
 } from 'thaw-common-utilities.ts';
 
 import {
-	add,
 	ema,
 	madev,
-	multiply,
-	safeDivide,
 	sma,
-	subtract,
 	trueRange,
 	typicalPrice,
 	wilderSmooth
@@ -82,47 +82,45 @@ export function adl(
 // Wilder: A strong trend is present when ADX > 25,
 // and no trend is present when ADX < 20.
 
+// Move this to core.ts :
+
+// function delta(array: number[], n: number): number[] {
+// 	return pointwise(
+// 		subtract,
+// 		array.slice(n),
+// 		array.slice(0, array.length - n)
+// 	);
+// }
+
+function diffAdjacentElements(array: number[]): number[] {
+	return rolling((...a: number[]) => a[a.length - 1] - a[0], array, 2);
+} // The first element of the returned array will be array[0] - array[0] === 0
+
+// function negate(n: number): number {
+// 	return -n;
+// }
+
 export function adx(
 	$high: number[],
 	$low: number[],
 	$close: number[],
 	window = 14
 ): IAdxResult {
-	// let dmp = [0];
-	// let dmm = [0];
-
-	// for (let i = 1, len = $low.length; i < len; i++) {
-	// 	const hd = $high[i] - $high[i - 1];
-	// 	const ld = $low[i - 1] - $low[i];
-
-	// 	dmp.push(hd > ld ? Math.max(hd, 0) : 0);
-	// 	dmm.push(ld > hd ? Math.max(ld, 0) : 0);
-	// }
-
-	const highDiffs = pointwise(
-		subtract,
-		$high.slice(1),
-		$high.slice(0, $high.length - 1)
-	);
-	const lowDiffs = pointwise(
-		subtract,
-		$low.slice(0, $low.length - 1),
-		$low.slice(1)
-	);
 	const fn1 = (a: number, b: number) => (a > b ? Math.max(a, 0) : 0);
-	const fn2 = (a: number[], b: number[]) =>
-		[0].concat(pointwise(fn1, a, b));
-	const dmp = wilderSmooth(fn2(highDiffs, lowDiffs), window);
-	const dmm = wilderSmooth(fn2(lowDiffs, highDiffs), window);
+	const fn2 = (a: number[], b: number[]) => pointwise(fn1, a, b);
+	const fn3 = (a: number, b: number) => (100 * a) / b;
 
 	const str = wilderSmooth(trueRange($high, $low, $close), window);
 
-	// dmp = wilderSmooth(dmp, window);
-	// dmm = wilderSmooth(dmm, window);
+	const fn4 = (a: number[], b: number[]) =>
+		pointwise(fn3, wilderSmooth(fn2(a, b), window), str);
 
-	const fn3 = (a: number, b: number) => (100 * a) / b;
-	const dip = pointwise(fn3, dmp, str);
-	const dim = pointwise(fn3, dmm, str);
+	const highDiffs = diffAdjacentElements($high);
+	const lowDiffs = diffAdjacentElements($low).map(negate);
+
+	const dip = fn4(highDiffs, lowDiffs);
+	const dim = fn4(lowDiffs, highDiffs);
+
 	const dx = pointwise(
 		(a: number, b: number) => (100 * Math.abs(a - b)) / (a + b),
 		dip,
@@ -210,11 +208,12 @@ export function fi(
 	$volume: number[],
 	window = 13
 ): number[] {
-	const delta = rolling(
-		(...s: number[]) => s[s.length - 1] - s[0],
-		$close,
-		2
-	);
+	// const delta = rolling(
+	// 	(...s: number[]) => s[s.length - 1] - s[0],
+	// 	$close,
+	// 	2
+	// );
+	const delta = diffAdjacentElements($close);
 
 	return ema(pointwise(multiply, delta, $volume), window);
 }
@@ -325,8 +324,8 @@ export function mfi(
 		nmf.push(diff < 0 ? tp[i] * $volume[i] : 0);
 	}
 
-	pmf = rolling(sum, pmf, window);
-	nmf = rolling(sum, nmf, window);
+	pmf = rolling(add, pmf, window);
+	nmf = rolling(add, nmf, window);
 
 	return pointwise(
 		(a: number, b: number) => 100 - 100 / (1 + a / b),
@@ -465,9 +464,9 @@ export function vi(
 		nv.push(Math.abs($high[i - 1] - $low[i]));
 	}
 
-	const apv = rolling(sum, pv, window);
-	const anv = rolling(sum, nv, window);
-	const atr = rolling(sum, trueRange($high, $low, $close), window);
+	const apv = rolling(add, pv, window);
+	const anv = rolling(add, nv, window);
+	const atr = rolling(add, trueRange($high, $low, $close), window);
 
 	return {
 		plus: pointwise(safeDivide, apv, atr),

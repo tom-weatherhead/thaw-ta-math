@@ -3,27 +3,30 @@
 /* Basic math */
 
 import {
-	arraySum,
+	add,
+	// arraySum,
 	cascade,
 	correlationCoefficient,
 	covariance,
 	createNaNArray,
-	fnAddition,
-	fnMultiplication,
-	fnSafeDivision,
-	fnSubtraction,
+	// fnAddition,
+	// fnMultiplication,
+	// fnSafeDivision,
+	// fnSubtraction,
 	mean,
+	// multiply,
 	pointwise,
 	rolling,
-	standardDeviation
+	standardDeviation // ,
+	// sum
 } from 'thaw-common-utilities.ts';
 
 import { emaCore } from 'thaw-macd';
 
-export const add = fnAddition;
-export const subtract = fnSubtraction;
-export const multiply = fnMultiplication;
-export const safeDivide = fnSafeDivision;
+// export const add = fnAddition;
+// export const subtract = fnSubtraction;
+// export const multiply = fnMultiplication;
+// export const safeDivide = fnSafeDivision;
 export const sd = (...array: number[]): number => standardDeviation(array);
 export const cov = covariance;
 export const cor = correlationCoefficient;
@@ -128,7 +131,7 @@ export function atr(
 }
 
 export function wilderSmooth(series: number[], window: number): number[] {
-	const start = arraySum(series.slice(1, window + 1));
+	const start = add(...series.slice(1, window + 1));
 
 	return createNaNArray(window).concat(
 		[start],
