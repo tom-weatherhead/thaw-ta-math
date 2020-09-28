@@ -393,6 +393,87 @@ test('Placeholder test', () => {
 // 	}
 // });
 
+// **** Tests of Indicators ****
+
+test('ADL test 1', () => {
+	// Arrange
+
+	// Act
+	const expectedResult = TA.adl(
+		test1High,
+		test1Low,
+		test1Close,
+		test1Volume
+	);
+	const actualResult = engine.adl(
+		test1High,
+		test1Low,
+		test1Close,
+		test1Volume
+	);
+
+	// Assert
+	expect(actualResult).toStrictEqual(expectedResult);
+});
+
+test('ADX test 1', () => {
+	// Arrange
+	const window = 14;
+
+	// Act
+	const expectedResult = TA.adx(test1High, test1Low, test1Close, window);
+	const actualResult = engine.adx(test1High, test1Low, test1Close, window);
+
+	// Assert
+	expect(actualResult).toStrictEqual(expectedResult);
+});
+
+test('BB test 1', () => {
+	// Arrange
+	const window = 20;
+	const mult = 2;
+
+	// Act
+	const expectedResult = TA.bb(test1Close, window, mult);
+	const actualResult = engine.bb(test1Close, window, mult);
+
+	// Assert
+
+	expect(actualResult.lower).toStrictEqual(expectedResult.lower);
+	expect(actualResult.middle).toStrictEqual(expectedResult.middle);
+	expect(actualResult.upper).toStrictEqual(expectedResult.upper);
+});
+
+test('BBP test 1', () => {
+	// Arrange
+	const window = 20;
+	const mult = 2;
+
+	// Act
+	const expectedResult = TA.bbp(test1Close, window, mult);
+	const actualResult = engine.bbp(test1Close, window, mult);
+
+	// Assert
+	expect(actualResult).toStrictEqual(expectedResult);
+});
+
+// ta-math does not implement bbw().
+
+// test('BBW test 1', () => {
+// 	// Arrange
+// 	const window = 20;
+// 	const mult = 2;
+
+// 	// Act
+// 	const expectedResult = TA.bbw(test1Close, window, mult);
+// 	const actualResult = engine.bbw(test1Close, window, mult);
+
+// 	// Assert
+// 	expect(actualResult).toStrictEqual(expectedResult);
+// });
+
+// Next: cci()
+
 test('MFI test 1', () => {
 	// Arrange
 	const window = 14;
@@ -412,6 +493,18 @@ test('MFI test 1', () => {
 		test1Volume,
 		window
 	);
+
+	// Assert
+	expect(actualResult).toStrictEqual(expectedResult);
+});
+
+test('RSI test 1', () => {
+	// Arrange
+	const window = 14;
+
+	// Act
+	const expectedResult = TA.rsi(test1Close, window);
+	const actualResult = engine.rsi(test1Close, window);
 
 	// Assert
 	expect(actualResult).toStrictEqual(expectedResult);

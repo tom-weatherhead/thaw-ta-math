@@ -4,30 +4,27 @@
 
 import {
 	add,
-	// arraySum,
 	cascade,
 	correlationCoefficient,
 	covariance,
 	createNaNArray,
-	// fnAddition,
-	// fnMultiplication,
-	// fnSafeDivision,
-	// fnSubtraction,
 	mean,
-	// multiply,
 	pointwise,
-	rolling,
-	standardDeviation // ,
-	// sum
+	rolling // ,
+	// standardDeviation // ,
 } from 'thaw-common-utilities.ts';
 
 import { emaCore } from 'thaw-macd';
 
-// export const add = fnAddition;
-// export const subtract = fnSubtraction;
-// export const multiply = fnMultiplication;
-// export const safeDivide = fnSafeDivision;
-export const sd = (...array: number[]): number => standardDeviation(array);
+// ThAW: Is our standardDeviation() buggy? It's in common-utilities.ts
+// export const sd = (...array: number[]): number => standardDeviation(array);
+export function sd(series: Array<number>): number {
+	const E = mean(series);
+	const E2 = mean(pointwise((x: number) => x * x, series));
+
+	return Math.sqrt(E2 - E * E);
+}
+
 export const cov = covariance;
 export const cor = correlationCoefficient;
 
@@ -103,7 +100,7 @@ export function ema(
 // Rolling standard deviation?
 
 export function stdev(series: number[], window: number): number[] {
-	return rolling(sd, series, window);
+	return rolling((...array: number[]) => sd(array), series, window);
 }
 
 export function madev(series: number[], window: number): number[] {
