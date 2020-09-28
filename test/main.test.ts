@@ -722,7 +722,10 @@ test('RSI test 1', () => {
 	const actualResult = engine.rsi(test1Close, window);
 
 	// Assert
-	expect(actualResult).toStrictEqual(expectedResult);
+	// expect(actualResult).toStrictEqual(expectedResult);
+	expect(
+		areArraysOfNumbersCloseEnough(actualResult, expectedResult)
+	).toBeTruthy();
 });
 
 test('STOCH test 1', () => {

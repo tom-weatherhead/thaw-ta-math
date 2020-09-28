@@ -27,6 +27,8 @@ import {
 	add,
 	cascade,
 	createNaNArray,
+	isNegative,
+	isNonNegative,
 	multiply,
 	negate,
 	pointwise,
@@ -36,6 +38,7 @@ import {
 } from 'thaw-common-utilities.ts';
 
 import {
+	absSubtract,
 	ema,
 	madev,
 	sma,
@@ -66,9 +69,6 @@ export interface IViResult {
 	minus: number[];
 }
 
-const isNegative = (n: number) => !Number.isNaN(n) && n < 0;
-const isNonNegative = (n: number) => !Number.isNaN(n) && n >= 0;
-
 /* Indicators */
 
 // AD (or ADL) : Accumulation / Distribution Line
@@ -89,9 +89,6 @@ export function adl(
 	$close: number[],
 	$volume: number[]
 ): number[] {
-	// const fn = (h: number, l: number, c: number, v: number) =>
-	// 	safeDivide(v * (2 * c - l - h), h - l);
-
 	return cascade(
 		(seed: number, h: number, l: number, c: number, v: number) =>
 			seed + safeDivide(v * (2 * c - l - h), h - l),
@@ -394,15 +391,26 @@ export function roc($close: number[], window = 14): number[] {
 // See Bollinger p. 169
 
 export function rsi($close: number[], window = 14): number[] {
-	const gains = [0];
-	const loss = [1e-14];
+	// const gains = [0];
+	// const loss = [1e-14];
 
-	for (let i = 1, len = $close.length; i < len; i++) {
-		const diff = $close[i] - $close[i - 1];
+	// for (let i = 1, len = $close.length; i < len; i++) {
+	// 	const diff = $close[i] - $close[i - 1];
 
-		gains.push(diff >= 0 ? diff : 0);
-		loss.push(diff < 0 ? -diff : 0);
-	}
+	// 	gains.push(diff >= 0 ? diff : 0);
+	// 	loss.push(diff < 0 ? -diff : 0);
+	// }
+
+	// ...
+
+	// ThAW :
+
+	const diffs = diffAdjacentElements(
+		// ThAW: This could be improved
+		[$close[0] + 1e-14].concat($close)
+	).slice(1);
+	const gains = pointwise((diff) => Math.max(diff, 0), diffs);
+	const loss = pointwise((diff) => Math.max(-diff, 0), diffs);
 
 	return pointwise(
 		(a: number, b: number) => 100 - 100 / (1 + a / b),
@@ -478,13 +486,19 @@ export function vi(
 	$close: number[],
 	window = 14
 ): IViResult {
-	const pv = [($high[0] - $low[0]) / 2];
-	const nv = [pv[0]];
+	const element0 = ($high[0] - $low[0]) / 2;
+	const pnv = (k: number): number[] =>
+		[element0].concat(
+			pointwise(
+				absSubtract,
+				$high.slice(1 - k, $high.length - k),
+				$low.slice(k, $low.length + k - 1)
+			)
+		);
+	const pv = pnv(0);
+	const nv = pnv(1);
 
-	for (let i = 1, len = $high.length; i < len; i++) {
-		pv.push(Math.abs($high[i] - $low[i - 1]));
-		nv.push(Math.abs($high[i - 1] - $low[i]));
-	}
+	//
 
 	const apv = rolling(add, pv, window);
 	const anv = rolling(add, nv, window);
