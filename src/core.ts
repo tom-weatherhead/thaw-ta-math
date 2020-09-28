@@ -5,28 +5,30 @@
 import {
 	add,
 	cascade,
-	correlationCoefficient,
-	covariance,
 	createNaNArray,
 	mean,
 	pointwise,
-	rolling // ,
-	// standardDeviation // ,
+	populationCorrelationCoefficient,
+	populationCovariance,
+	rolling,
+	standardDeviation,
+	unspreadArrayParameter
 } from 'thaw-common-utilities.ts';
 
 import { emaCore } from 'thaw-macd';
 
 // ThAW: Is our standardDeviation() buggy? It's in common-utilities.ts
+export const sd = standardDeviation;
 // export const sd = (...array: number[]): number => standardDeviation(array);
-export function sd(series: Array<number>): number {
-	const E = mean(series);
-	const E2 = mean(pointwise((x: number) => x * x, series));
+// export function sd(series: Array<number>): number {
+// 	const E = mean(series);
+// 	const E2 = mean(pointwise((x: number) => x * x, series));
 
-	return Math.sqrt(E2 - E * E);
-}
+// 	return Math.sqrt(E2 - E * E);
+// }
 
-export const cov = covariance;
-export const cor = correlationCoefficient;
+export const cov = populationCovariance;
+export const cor = populationCorrelationCoefficient;
 
 export function mad(array: number[]): number {
 	return mae(array, new Array(array.length).fill(mean(array)));
@@ -76,7 +78,8 @@ export function mape(f: number[], g: number[]): number {
 // Simple moving average
 
 export function sma(series: number[], window: number): number[] {
-	return rolling((...args: number[]) => mean(args), series, window);
+	// return rolling((...args: number[]) => mean(args), series, window);
+	return rolling(unspreadArrayParameter(mean), series, window);
 }
 
 // Exponential moving average
@@ -100,18 +103,21 @@ export function ema(
 // Rolling standard deviation?
 
 export function stdev(series: number[], window: number): number[] {
-	return rolling((...array: number[]) => sd(array), series, window);
+	// return rolling((...array: number[]) => sd(array), series, window);
+	return rolling(unspreadArrayParameter(sd), series, window);
 }
 
 export function madev(series: number[], window: number): number[] {
-	return rolling((...args: number[]) => mad(args), series, window);
+	// return rolling((...args: number[]) => mad(args), series, window);
+	return rolling(unspreadArrayParameter(mad), series, window);
 }
 
 export function expdev(series: number[], window: number): number[] {
 	return ema(
 		sqrDiff(series, ema(series, window)),
 		window
-	).map((x: number) => Math.sqrt(x));
+		// ).map((x: number) => Math.sqrt(x));
+	).map(Math.sqrt);
 }
 
 /* J. Welles Wilder Jr.'s functions */
@@ -161,17 +167,18 @@ export function trueRange(
 	$low: number[],
 	$close: number[]
 ): number[] {
-	const tr = [$high[0] - $low[0]];
-
-	for (let i = 1, len = $low.length; i < len; i++) {
-		tr.push(
-			Math.max(
-				$high[i] - $low[i],
-				Math.abs($high[i] - $close[i - 1]),
-				Math.abs($low[i] - $close[i - 1])
-			)
+	let closureSeed = $low[0];
+	const closure = (h: number, l: number, c: number): number => {
+		const result = Math.max(
+			h - l,
+			Math.abs(h - closureSeed),
+			Math.abs(l - closureSeed)
 		);
-	}
 
-	return tr;
+		closureSeed = c;
+
+		return result;
+	};
+
+	return pointwise(closure, $high, $low, $close);
 }

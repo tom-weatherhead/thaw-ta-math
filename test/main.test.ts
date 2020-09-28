@@ -323,6 +323,19 @@ const test1Volume = ohlcvTestData1.map((ohlcv) => ohlcv.volume);
 // 	slow = 26,
 // 	signal = 9;
 
+function areArraysOfNumbersCloseEnough(a: number[], b: number[]): boolean {
+	// const maxDelta = 0.000001; // 10 ^ -6
+	const maxDelta = 0.00000001; // 10 ^ -8
+
+	for (let i = 0; i < a.length; ++i) {
+		if (Math.abs(a[i] - b[i]) > maxDelta) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 test('Placeholder test', () => {
 	// Arrange
 	// Act
@@ -393,6 +406,39 @@ test('Placeholder test', () => {
 // 	}
 // });
 
+// **** Tests of Core ****
+
+function trueRange( // Implementation from ta-math
+	$high: number[],
+	$low: number[],
+	$close: number[]
+): number[] {
+	const tr = [$high[0] - $low[0]];
+
+	for (let i = 1, len = $low.length; i < len; i++) {
+		tr.push(
+			Math.max(
+				$high[i] - $low[i],
+				Math.abs($high[i] - $close[i - 1]),
+				Math.abs($low[i] - $close[i - 1])
+			)
+		);
+	}
+
+	return tr;
+}
+
+test('trueRange test 1', () => {
+	// Arrange
+
+	// Act
+	const expectedResult = trueRange(test1High, test1Low, test1Close);
+	const actualResult = engine.trueRange(test1High, test1Low, test1Close);
+
+	// Assert
+	expect(actualResult).toStrictEqual(expectedResult);
+});
+
 // **** Tests of Indicators ****
 
 test('ADL test 1', () => {
@@ -439,9 +485,21 @@ test('BB test 1', () => {
 
 	// Assert
 
-	expect(actualResult.lower).toStrictEqual(expectedResult.lower);
+	// expect(actualResult.lower).toStrictEqual(expectedResult.lower);
+	expect(
+		areArraysOfNumbersCloseEnough(
+			actualResult.lower,
+			expectedResult.lower
+		)
+	).toBeTruthy();
 	expect(actualResult.middle).toStrictEqual(expectedResult.middle);
-	expect(actualResult.upper).toStrictEqual(expectedResult.upper);
+	// expect(actualResult.upper).toStrictEqual(expectedResult.upper);
+	expect(
+		areArraysOfNumbersCloseEnough(
+			actualResult.upper,
+			expectedResult.upper
+		)
+	).toBeTruthy();
 });
 
 test('BBP test 1', () => {
@@ -454,7 +512,10 @@ test('BBP test 1', () => {
 	const actualResult = engine.bbp(test1Close, window, mult);
 
 	// Assert
-	expect(actualResult).toStrictEqual(expectedResult);
+	// expect(actualResult).toStrictEqual(expectedResult);
+	expect(
+		areArraysOfNumbersCloseEnough(actualResult, expectedResult)
+	).toBeTruthy();
 });
 
 // ta-math does not implement bbw().
@@ -472,7 +533,137 @@ test('BBP test 1', () => {
 // 	expect(actualResult).toStrictEqual(expectedResult);
 // });
 
-// Next: cci()
+test('CCI test 1', () => {
+	// Arrange
+	const window = 20;
+	const mult = 0.015;
+
+	// Act
+	const expectedResult = TA.cci(
+		test1High,
+		test1Low,
+		test1Close,
+		window,
+		mult
+	);
+	const actualResult = engine.cci(
+		test1High,
+		test1Low,
+		test1Close,
+		window,
+		mult
+	);
+
+	// Assert
+	expect(actualResult).toStrictEqual(expectedResult);
+});
+
+test('CHO test 1', () => {
+	// Arrange
+	const winshort = 3;
+	const winlong = 10;
+
+	// Act
+	const expectedResult = TA.cho(
+		test1High,
+		test1Low,
+		test1Close,
+		test1Volume,
+		winshort,
+		winlong
+	);
+	const actualResult = engine.cho(
+		test1High,
+		test1Low,
+		test1Close,
+		test1Volume,
+		winshort,
+		winlong
+	);
+
+	// Assert
+	expect(actualResult).toStrictEqual(expectedResult);
+});
+
+// fi() ?
+
+// test('II test 1', () => {
+// 	// Arrange
+
+// 	// Act
+// 	const expectedResult = TA.ii( // ta-math does not implement ii
+// 		test1High,
+// 		test1Low,
+// 		test1Close,
+// 		test1Volume
+// 	);
+// 	const actualResult = engine.ii(
+// 		test1High,
+// 		test1Low,
+// 		test1Close,
+// 		test1Volume
+// 	);
+
+// 	// Assert
+// 	expect(actualResult).toStrictEqual(expectedResult);
+// });
+
+// test('KST test 1', () => {
+// 	// Arrange
+// 	const w1 = 10;
+// 	const w2 = 15;
+// 	const w3 = 20;
+// 	const w4 = 30;
+// 	const s1 = 10;
+// 	const s2 = 10;
+// 	const s3 = 10;
+// 	const s4 = 15;
+// 	const sig = 9;
+
+// 	// Act
+// 	const expectedResult = TA.kst( // Is TA.kst() buggy?
+// 		test1Close,
+// 		w1,
+// 		w2,
+// 		w3,
+// 		w4,
+// 		s1,
+// 		s2,
+// 		s3,
+// 		s4,
+// 		sig
+// 	);
+// 	const actualResult = engine.kst(
+// 		test1Close,
+// 		w1,
+// 		w2,
+// 		w3,
+// 		w4,
+// 		s1,
+// 		s2,
+// 		s3,
+// 		s4,
+// 		sig
+// 	);
+
+// 	// Assert
+// 	expect(actualResult.line).toStrictEqual(expectedResult.line);
+// 	expect(actualResult.signal).toStrictEqual(expectedResult.signal);
+// });
+
+test('MACD test 1', () => {
+	// Arrang
+	const winshort = 12;
+	const winlong = 26;
+	const winsig = 9;
+
+	// Act
+	const expectedResult = TA.macd(test1Close, winshort, winlong, winsig);
+	const actualResult = engine.macd(test1Close, winshort, winlong, winsig);
+
+	// Assert
+	expect(actualResult).toStrictEqual(expectedResult);
+});
 
 test('MFI test 1', () => {
 	// Arrange
@@ -498,6 +689,30 @@ test('MFI test 1', () => {
 	expect(actualResult).toStrictEqual(expectedResult);
 });
 
+test('OBV test 1', () => {
+	// Arrange
+	const signal = 10;
+
+	// Act
+	const expectedResult = TA.obv(test1Close, test1Volume, signal);
+	const actualResult = engine.obv(test1Close, test1Volume, signal);
+
+	// Assert
+	expect(actualResult).toStrictEqual(expectedResult);
+});
+
+test('ROC test 1', () => {
+	// Arrange
+	const window = 14;
+
+	// Act
+	const expectedResult = TA.roc(test1Close, window);
+	const actualResult = engine.roc(test1Close, window);
+
+	// Assert
+	expect(actualResult).toStrictEqual(expectedResult);
+});
+
 test('RSI test 1', () => {
 	// Arrange
 	const window = 14;
@@ -509,3 +724,101 @@ test('RSI test 1', () => {
 	// Assert
 	expect(actualResult).toStrictEqual(expectedResult);
 });
+
+test('STOCH test 1', () => {
+	// Arrange
+	const window = 14;
+	const signal = 3; // %D ?
+	const smooth = 1; // %K ?
+
+	// Act
+	const expectedResult = TA.stoch(
+		test1High,
+		test1Low,
+		test1Close,
+		window,
+		signal,
+		smooth
+	);
+	const actualResult = engine.stoch(
+		test1High,
+		test1Low,
+		test1Close,
+		window,
+		signal,
+		smooth
+	);
+
+	// Assert
+	expect(actualResult).toStrictEqual(expectedResult);
+});
+
+test('STOCHRSI test 1', () => {
+	// Arrange
+	const window = 14;
+	const signal = 3; // %D ?
+	const smooth = 1; // %K ?
+
+	// Act
+	const expectedResult = TA.stochRsi(test1Close, window, signal, smooth);
+	const actualResult = engine.stochRsi(test1Close, window, signal, smooth);
+
+	// Assert
+	// expect(actualResult.line).toStrictEqual(
+	// 	expectedResult.line.map((n) => n * 100)
+	// );
+	expect(
+		areArraysOfNumbersCloseEnough(
+			actualResult.line,
+			expectedResult.line.map((n) => n * 100)
+		)
+	).toBeTruthy();
+	// expect(actualResult.signal).toStrictEqual(
+	// 	expectedResult.signal.map((n) => n * 100)
+	// );
+	expect(
+		areArraysOfNumbersCloseEnough(
+			actualResult.signal,
+			expectedResult.signal.map((n) => n * 100)
+		)
+	).toBeTruthy();
+});
+
+test('VI test 1', () => {
+	// Arrange
+	const window = 14;
+
+	// Act
+	const expectedResult = TA.vi(test1High, test1Low, test1Close, window);
+	const actualResult = engine.vi(test1High, test1Low, test1Close, window);
+
+	// Assert
+	expect(actualResult.plus).toStrictEqual(expectedResult.plus);
+	expect(actualResult.minus).toStrictEqual(expectedResult.minus);
+});
+
+test('WILLIAMS test 1', () => {
+	// Arrange
+	const window = 14;
+
+	// Act
+	const expectedResult = TA.williams(
+		test1High,
+		test1Low,
+		test1Close,
+		window
+	);
+	const actualResult = engine.williams(
+		test1High,
+		test1Low,
+		test1Close,
+		window
+	);
+
+	// Assert
+	expect(actualResult).toStrictEqual(expectedResult);
+});
+
+// **** Tests of Overlays ****
+
+// ...

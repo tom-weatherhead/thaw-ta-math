@@ -122,10 +122,6 @@ function diffAdjacentElements(array: number[]): number[] {
 	return rolling((...a: number[]) => a[a.length - 1] - a[0], array, 2);
 } // The first element of the returned array will be array[0] - array[0] === 0
 
-// function negate(n: number): number {
-// 	return -n;
-// }
-
 export function adx(
 	$high: number[],
 	$low: number[],
@@ -234,14 +230,10 @@ export function fi(
 	$volume: number[],
 	window = 13
 ): number[] {
-	// const delta = rolling(
-	// 	(...s: number[]) => s[s.length - 1] - s[0],
-	// 	$close,
-	// 	2
-	// );
-	const delta = diffAdjacentElements($close);
-
-	return ema(pointwise(multiply, delta, $volume), window);
+	return ema(
+		pointwise(multiply, diffAdjacentElements($close), $volume),
+		window
+	);
 }
 
 // Intraday Intensity - Created by David Bostian
