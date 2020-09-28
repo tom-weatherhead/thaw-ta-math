@@ -1,5 +1,28 @@
 // thaw-ta-math/src/indicators.ts
 
+// TODO:
+// - Accelerator Oscillator (Bill Williams)
+// - Alligator (Bill Williams)
+// - Average Directional Movement Index (trend)
+// - (Average True Range)
+// - Awesome Oscillator (Bill Williams)
+// - Parabolic SAR (trend)
+// - Standard Deviation (trend)
+// - Bears Power
+// - Bulls Power
+// - DeMarker
+// - Force Index
+// - Momentum
+// - Relative Vigor Index
+// - Volumes?
+// - Fractals (Bill Williams)
+// - Gator Oscillator (Bill Williams)
+// - Market Fecilitation Index (Bill Williams)
+// - Ichimoku
+// - Heiken Ashi
+// - iExposure
+// - OsMA
+
 import {
 	add,
 	cascade,
@@ -42,6 +65,9 @@ export interface IViResult {
 	plus: number[];
 	minus: number[];
 }
+
+const isNegative = (n: number) => !Number.isNaN(n) && n < 0;
+const isNonNegative = (n: number) => !Number.isNaN(n) && n >= 0;
 
 /* Indicators */
 
@@ -201,7 +227,7 @@ export function cho(
 	return pointwise(subtract, ema(adli, winshort), ema(adli, winlong));
 }
 
-// WTF is this FI?
+// WTF is this FI? Force Index?
 
 export function fi(
 	$close: number[],
@@ -313,19 +339,23 @@ export function mfi(
 	$volume: number[],
 	window = 14
 ): number[] {
-	let pmf = [0];
-	let nmf = [0];
 	const tp = typicalPrice($high, $low, $close);
+	const tpv = pointwise(multiply, tp, $volume);
+	const diffs = diffAdjacentElements(tp);
 
-	for (let i = 1, len = $close.length; i < len; i++) {
-		const diff = tp[i] - tp[i - 1];
+	tpv[0] = 0;
 
-		pmf.push(diff >= 0 ? tp[i] * $volume[i] : 0);
-		nmf.push(diff < 0 ? tp[i] * $volume[i] : 0);
-	}
+	const xmf = (pred: (a: number) => boolean) =>
+		rolling(
+			add,
+			pointwise((a, val) => (pred(a) ? val : 0), diffs, tpv),
+			window
+		);
 
-	pmf = rolling(add, pmf, window);
-	nmf = rolling(add, nmf, window);
+	// pmf = Positive Money Flow
+	// nmf = Negative Money Flow
+	const pmf = xmf(isNonNegative);
+	const nmf = xmf(isNegative);
 
 	return pointwise(
 		(a: number, b: number) => 100 - 100 / (1 + a / b),
