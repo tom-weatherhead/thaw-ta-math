@@ -17,7 +17,7 @@ import {
 
 import { emaCore } from 'thaw-macd';
 
-export const absSubtract = (a: number, b: number) => Math.abs(a - b);
+export const absSubtract = (a: number, b: number): number => Math.abs(a - b);
 
 // ThAW: Is our standardDeviation() buggy? It's in common-utilities.ts
 export const sd = standardDeviation;
@@ -39,13 +39,9 @@ export function mad(array: number[]): number {
 /* Scaled and percentage error */
 
 export function mae(f: number[], g: number[]): number {
-	const absDiff = pointwise(
-		absSubtract, // (a: number, b: number) => Math.abs(a - b),
-		f,
-		g
-	);
-
-	return f.length !== g.length ? Infinity : mean(absDiff);
+	return f.length !== g.length
+		? Infinity
+		: mean(pointwise(absSubtract, f, g));
 }
 
 export function sqrDiff(array1: number[], array2: number[]): number[] {
