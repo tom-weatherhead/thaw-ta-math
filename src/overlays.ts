@@ -79,6 +79,9 @@ export function keltner(
 	return { lower, middle, upper };
 }
 
+// Parabolic SAR (Stop And Reversal) ?
+// See e.g. https://tradingstrategyguides.com/parabolic-sar-moving-average-trade-strategy/
+
 export function psar(
 	$high: number[],
 	$low: number[],
@@ -112,6 +115,35 @@ export function psar(
 	}
 
 	return psar;
+
+	// ThAW:
+
+	// TODO: First use rolling() to calculate the min and max of the 4-value slices:
+	// const lowMin = rolling(Math.min, $low.concat([$low[$low.length - 1]]), 4).slice(3);
+	// const highMax = rolling(Math.max, $high.concat([$high[$high.length - 1]]), 4).slice(3);
+
+	// return [$low[0], Math.min($low[0], $low[1])].concat(pointwise(
+	// 	(l: number, h: number, lm: number, hm: number): number => {
+	// 		cursar = cursar + factor * (extreme - cursar);
+
+	// 		if ((isUp && h > extreme) || (!isUp && l < extreme)) {
+	// 			factor = factor <= maxfactor ? factor + stepfactor : maxfactor;
+	// 			extreme = isUp ? h: l;
+	// 		}
+
+	// 		if ((isUp && l < cursar) || (!isUp && cursar > h)) {
+	// 			isUp = !isUp;
+	// 			factor = stepfactor;
+	// 			cursar = isUp ? lm : hm;
+	// 		}
+
+	// 		return cursar;
+	// 	},
+	// 	$low.slice(2),
+	// 	$high.slice(2),
+	// 	lowMin,
+	// 	highMax
+	// ));
 }
 
 export function tema($close: number[], window = 10): number[] {

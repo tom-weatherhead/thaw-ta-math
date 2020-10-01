@@ -6,7 +6,7 @@
 // - Average Directional Movement Index (trend)
 // - (Average True Range)
 // - Awesome Oscillator (Bill Williams)
-// - Parabolic SAR (trend)
+// X Parabolic SAR (trend) -> See psar
 // - Standard Deviation (trend)
 // - Bears Power
 // - Bulls Power
