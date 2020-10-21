@@ -1,11 +1,13 @@
 // thaw-ta-math/src/overlays.ts
 
 import {
+	add,
 	createNaNArray,
 	fnMultiplication,
 	fnSafeDivision,
 	pointwise,
 	rolling,
+	subtract,
 	sum
 } from 'thaw-common-utilities.ts';
 
@@ -65,16 +67,20 @@ export function keltner(
 	mult = 2
 ): Record<string, number[]> {
 	const middle = ema($close, window);
-	const upper = pointwise(
-		(a: number, b: number) => a + mult * b,
-		middle,
-		atr($high, $low, $close, window)
-	);
-	const lower = pointwise(
-		(a: number, b: number) => a - mult * b,
-		middle,
-		atr($high, $low, $close, window)
-	);
+	const atrValues = atr($high, $low, $close, window);
+	const scaledAtrValues = atrValues.map((n) => mult * n);
+	// const upper = pointwise(
+	// 	(a: number, b: number) => a + mult * b,
+	// 	middle,
+	// 	atrValues
+	// );
+	// const lower = pointwise(
+	// 	(a: number, b: number) => a - mult * b,
+	// 	middle,
+	// 	atrValues
+	// );
+	const upper = pointwise(add, middle, scaledAtrValues);
+	const lower = pointwise(subtract, middle, scaledAtrValues);
 
 	return { lower, middle, upper };
 }
@@ -158,6 +164,8 @@ export function tema($close: number[], window = 10): number[] {
 	);
 }
 
+// Volume by Price
+
 export function vbp(
 	$close: number[],
 	$volume: number[],
@@ -165,24 +173,38 @@ export function vbp(
 	left = 0,
 	right = NaN
 ): IVbpResult {
-	let total = 0;
-	let bottom = Infinity;
-	let top = -Infinity;
+	// let total = 0;
+	// let bottom = Infinity;
+	// let top = -Infinity;
 	const vbp = new Array(zones).fill(0);
 
 	right = !isNaN(right) ? right : $close.length;
 
-	for (let i = left; i < right; i++) {
-		total += $volume[i];
-		top = top < $close[i] ? $close[i] : top;
-		bottom = bottom > $close[i] ? $close[i] : bottom;
-	}
+	const closeSlice = $close.slice(left, right);
+	const volumeSlice = $volume.slice(left, right);
+	const bottom = Math.min(Infinity, ...closeSlice);
+	const top = Math.max(-Infinity, ...closeSlice);
+	const total = sum(...$volume);
 
-	for (let i = left; i < right; i++) {
-		vbp[
-			Math.floor((($close[i] - bottom) / (top - bottom)) * (zones - 1))
-		] += $volume[i];
-	}
+	// for (let i = left; i < right; i++) {
+	// 	total += $volume[i];
+	// 	// top = top < $close[i] ? $close[i] : top;
+	// 	top = Math.max(top, $close[i]);
+	// 	// bottom = bottom > $close[i] ? $close[i] : bottom;
+	// 	bottom = Math.min(bottom, $close[i]);
+	// }
+
+	const indices = closeSlice.map((c) =>
+		Math.floor(((c - bottom) / (top - bottom)) * (zones - 1))
+	);
+
+	pointwise((i, v) => (vbp[i] += v), indices, volumeSlice);
+
+	// for (let i = left; i < right; i++) {
+	// 	vbp[
+	// 		Math.floor((($close[i] - bottom) / (top - bottom)) * (zones - 1))
+	// 	] += $volume[i];
+	// }
 
 	return {
 		bottom, // number
@@ -190,6 +212,8 @@ export function vbp(
 		volumes: vbp.map((x) => x / total) // number[]
 	};
 }
+
+// Volume Weighted Average Price
 
 export function vwap(
 	$high: number[],
@@ -221,11 +245,6 @@ export function vwma(
 	// exactly two arrays are passed to pointwise(); it would not work
 	// with some other number of arrays.
 	const vwprices = pointwise(fnMultiplication, $close, $volume);
-
-	// console.log('vwma: $close is', $close);
-	// console.log('vwma: $volume is', $volume);
-	// console.log('vwma: window is', window);
-	// console.log('vwma: vwprices is', vwprices);
 
 	return pointwise(
 		fnSafeDivision,

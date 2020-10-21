@@ -69,6 +69,14 @@ export interface IViResult {
 	minus: number[];
 }
 
+// Money Flow Volume (Marc Chaikin) : Used in adl and cmf.
+
+function mfv(h: number, l: number, c: number, v: number): number {
+	// return v * safeDivide((c - l) - (h - c), (h - l));
+
+	return safeDivide(v * (2 * c - l - h), h - l);
+}
+
 /* Indicators */
 
 // AD (or ADL) : Accumulation / Distribution Line
@@ -91,7 +99,8 @@ export function adl(
 ): number[] {
 	return cascade(
 		(seed: number, h: number, l: number, c: number, v: number) =>
-			seed + safeDivide(v * (2 * c - l - h), h - l),
+			// seed + safeDivide(v * (2 * c - l - h), h - l),
+			seed + mfv(h, l, c, v),
 		0,
 		$high,
 		$low,
@@ -218,6 +227,41 @@ export function cho(
 	const adli = adl($high, $low, $close, $volume);
 
 	return pointwise(subtract, ema(adli, winshort), ema(adli, winlong));
+}
+
+// Chaikin Money Flow - Created by Marc Chaikin
+// See https://school.stockcharts.com/doku.php?id=technical_indicators:chaikin_money_flow_cmf
+
+// 1. Money Flow Multiplier = [(Close  -  Low) - (High - Close)] /(High - Low)
+
+// 2. Money Flow Volume = Money Flow Multiplier x Volume for the Period
+
+// 3. 20-period CMF = 20-period Sum of Money Flow Volume / 20 period Sum of Volume
+
+// CMF values are in the range [-1, 1].
+
+export function cmf(
+	$high: number[],
+	$low: number[],
+	$close: number[],
+	$volume: number[],
+	window = 20
+): number[] {
+	// This mfv (money flow volume) formula is also used in
+	// Chaikin's Accumulation / Distribution Line indicator.
+	const mfvValues = pointwise(
+		mfv, // (h, l, c, v) => v * safeDivide((c - l) - (h - c), (h - l)),
+		$high,
+		$low,
+		$close,
+		$volume
+	);
+
+	return pointwise(
+		safeDivide,
+		sma(mfvValues, window),
+		sma($volume, window)
+	);
 }
 
 // WTF is this FI? Force Index?
