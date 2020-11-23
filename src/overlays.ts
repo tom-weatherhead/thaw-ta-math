@@ -173,9 +173,6 @@ export function vbp(
 	left = 0,
 	right = NaN
 ): IVbpResult {
-	// let total = 0;
-	// let bottom = Infinity;
-	// let top = -Infinity;
 	const vbp = new Array(zones).fill(0);
 
 	right = !isNaN(right) ? right : $close.length;
@@ -185,26 +182,11 @@ export function vbp(
 	const bottom = Math.min(Infinity, ...closeSlice);
 	const top = Math.max(-Infinity, ...closeSlice);
 	const total = sum(...$volume);
-
-	// for (let i = left; i < right; i++) {
-	// 	total += $volume[i];
-	// 	// top = top < $close[i] ? $close[i] : top;
-	// 	top = Math.max(top, $close[i]);
-	// 	// bottom = bottom > $close[i] ? $close[i] : bottom;
-	// 	bottom = Math.min(bottom, $close[i]);
-	// }
-
 	const indices = closeSlice.map((c) =>
 		Math.floor(((c - bottom) / (top - bottom)) * (zones - 1))
 	);
 
 	pointwise((i, v) => (vbp[i] += v), indices, volumeSlice);
-
-	// for (let i = left; i < right; i++) {
-	// 	vbp[
-	// 		Math.floor((($close[i] - bottom) / (top - bottom)) * (zones - 1))
-	// 	] += $volume[i];
-	// }
 
 	return {
 		bottom, // number
