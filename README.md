@@ -69,5 +69,5 @@ Financial technical analysis library in TypeScript. Calculates indicators amd ov
 [prettier-url]: https://github.com/prettier/prettier
 [license-badge-image]: https://img.shields.io/github/license/mashape/apistatus.svg
 [license-url]: https://github.com/tom-weatherhead/thaw-ta-math/blob/master/LICENSE
-[fossa-badge-image]: https://app.fossa.io/api/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Fmoment%2Fmoment.svg?type=shield
-[fossa-badge-url]: https://app.fossa.io/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Fmoment%2Fmoment?ref=badge_shield
+[fossa-badge-image]: https://app.fossa.io/api/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Ftom%2Dweatherhead%2Fthaw%2Dta%2Dmath.svg?type=shield
+[fossa-badge-url]: https://app.fossa.io/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Ftom%2Dweatherhead%2Fthaw%2Dta%2Dmath?ref=badge_shield
