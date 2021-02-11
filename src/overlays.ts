@@ -379,3 +379,87 @@ export function generatePriceFilterOverlay(
 
 	return overlay;
 }
+
+// **** Support and Resistance Levels ****
+
+export interface ISupportResistanceLevels {
+	R5?: number[];
+	R4?: number[];
+	R3?: number[];
+	R2?: number[];
+	R1?: number[];
+	PP?: number[];
+	S1?: number[];
+	S2?: number[];
+	S3?: number[];
+	S4?: number[];
+	S5?: number[];
+}
+
+// Stolen from from https://github.com/Raghav-Dhir/Support-and-Resistance :
+
+// 1) Classic Method
+
+export function srClassic(
+	$high: number[],
+	$low: number[],
+	$close: number[]
+): ISupportResistanceLevels {
+	const fnAvg3 = (a: number, b: number, c: number) => (a + b + c) / 3;
+	const fnSR1 = (a: number, b: number) => 2 * a - b;
+	const fnSR2 = (a: number, b: number, c: number) => a + b - c;
+	const fnSR3 = (a: number, b: number, c: number) => a + 2 * (b - c);
+
+	const pivotPoints = pointwise(fnAvg3, $high, $low, $close);
+
+	return {
+		PP: pivotPoints,
+		R1: pointwise(fnSR1, pivotPoints, $low),
+		S1: pointwise(fnSR1, pivotPoints, $high),
+		R2: pointwise(fnSR2, pivotPoints, $high, $low),
+		S2: pointwise(fnSR2, pivotPoints, $low, $high),
+		R3: pointwise(fnSR3, $high, pivotPoints, $low),
+		S3: pointwise(fnSR3, $low, pivotPoints, $high)
+	};
+}
+
+// 2) Fibonacci Retracement Method
+
+export function srFibonacciRetracement(
+	$high: number[],
+	$low: number[],
+	$close: number[]
+): ISupportResistanceLevels {
+	// The Golden Ratio is (1 + sqrt(5)) / 2, or approximately 1.618
+	// 1 / 1.618 = 1.618 - 1 = 0.618
+	const fibRetracement = [0.236, 0.382, 0.5, 0.618, 0.786];
+	const diff = pointwise(subtract, $high, $low);
+
+	const fnAvg3 = (a: number, b: number, c: number) => (a + b + c) / 3;
+	const pivotPoints = pointwise(fnAvg3, $high, $low, $close);
+
+	const diffN = (n: number) => diff.map((d) => d * fibRetracement[n - 1]);
+
+	const diff1 = diffN(1);
+	const diff2 = diffN(2);
+	const diff3 = diffN(3);
+	const diff4 = diffN(4);
+	const diff5 = diffN(5);
+
+	return {
+		PP: pivotPoints,
+		R1: pointwise(subtract, pivotPoints, diff1),
+		S1: pointwise(add, pivotPoints, diff1),
+		R2: pointwise(subtract, pivotPoints, diff2),
+		S2: pointwise(add, pivotPoints, diff2),
+		R3: pointwise(subtract, pivotPoints, diff3),
+		S3: pointwise(add, pivotPoints, diff3),
+		R4: pointwise(subtract, pivotPoints, diff4),
+		S4: pointwise(add, pivotPoints, diff4),
+		R5: pointwise(subtract, pivotPoints, diff5),
+		S5: pointwise(add, pivotPoints, diff5)
+	};
+}
+
+// Calculate PivotPoints (Classic, Woodie, Camarilla and DeMark) and Fibonacci Retracements
+// Stolen from https://github.com/KiranJPatel/PivotPointsFibonacciCalculator

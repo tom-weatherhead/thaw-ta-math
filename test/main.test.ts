@@ -7,7 +7,7 @@ import TA from 'ta-math';
 // import * as macdKaelZhang from 'macd';
 // import * as d3fc from '@d3fc/d3fc-technical-indicator';
 
-import * as engine from '../lib/main';
+import * as engine from '..';
 
 const ohlcvTestData1 = [
 	//EURUSD 1H bid data

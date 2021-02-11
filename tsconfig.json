@@ -1,11 +1,13 @@
 {
 	"compilerOptions": {
-		"target": "es2015",
+		"declaration": true,
 		"module": "es2015",
 		"moduleResolution": "node",
-		"declaration": true,
-		"outDir": "./lib",
+		"noImplicitThis": true,
+		"outDir": "./dist/types",
+		"sourceMap": false,
 		"strict": true,
+		"target": "es2015",
 		"types": [
 			"jest",
 			"node"
