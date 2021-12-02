@@ -22,7 +22,6 @@ export interface IVbpResult {
 /* Overlays */
 
 // Bollinger himself recommends the defaults window = 20 and mult = 2
-// export function bb($close: number[], window = 15, mult = 2) {
 export function bb(
 	$close: number[],
 	window = 20,
@@ -282,7 +281,7 @@ export function zigzag(
 
 // ****
 
-// ThAW's own algorithm: 2020-05-13
+// ThAW's own algorithm: 2020-05-13 (in Beijing)
 
 export function generatePriceFilterOverlay(
 	filterThreshold: number,

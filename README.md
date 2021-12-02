@@ -1,7 +1,6 @@
 # thaw-ta-math
 Financial technical analysis library in TypeScript. Calculates indicators amd overlays from OHLCV data.
 
-[![build status][build-status-badge-image]][build-status-url]
 [![npm version][npm-version-badge-image]][npm-version-url]
 [![latest tag][latest-tag-badge-image]][latest-tag-url]
 [![npm total downloads][npm-total-downloads-badge-image]][npm-total-downloads-url]
@@ -22,13 +21,10 @@ Financial technical analysis library in TypeScript. Calculates indicators amd ov
 [![tested with jest][jest-badge-image]][jest-url]
 [![code style: prettier][prettier-badge-image]][prettier-url]
 [![license][license-badge-image]][license-url]
-[![FOSSA Status][fossa-badge-image]][fossa-badge-url]
 
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
 
-[build-status-badge-image]: https://secure.travis-ci.org/tom-weatherhead/thaw-ta-math.svg
-[build-status-url]: https://travis-ci.org/tom-weatherhead/thaw-ta-math
 [npm-version-badge-image]: https://img.shields.io/npm/v/thaw-ta-math.svg
 [npm-version-url]: https://www.npmjs.com/package/thaw-ta-math
 [latest-tag-badge-image]: https://badgen.net/github/tag/tom-weatherhead/thaw-ta-math
@@ -69,5 +65,3 @@ Financial technical analysis library in TypeScript. Calculates indicators amd ov
 [prettier-url]: https://github.com/prettier/prettier
 [license-badge-image]: https://img.shields.io/github/license/mashape/apistatus.svg
 [license-url]: https://github.com/tom-weatherhead/thaw-ta-math/blob/master/LICENSE
-[fossa-badge-image]: https://app.fossa.io/api/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Ftom%2Dweatherhead%2Fthaw%2Dta%2Dmath.svg?type=shield
-[fossa-badge-url]: https://app.fossa.io/projects/git%2Bhttps%3A%2F%2Fgithub.com%2Ftom%2Dweatherhead%2Fthaw%2Dta%2Dmath?ref=badge_shield
