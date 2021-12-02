@@ -98,7 +98,6 @@
 	},
 	"os": [
 		"darwin",
-		"linux",
 		"win32"
 	],
 	"cpu": [
