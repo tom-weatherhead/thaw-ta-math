@@ -1,6 +1,7 @@
 # thaw-ta-math
-Financial technical analysis library in TypeScript. Calculates indicators amd overlays from OHLCV data.
+Financial technical analysis library in TypeScript. Calculates indicators and overlays from OHLCV data.
 
+[![build status][build-status-badge-image]][build-status-url]
 [![npm version][npm-version-badge-image]][npm-version-url]
 [![latest tag][latest-tag-badge-image]][latest-tag-url]
 [![npm total downloads][npm-total-downloads-badge-image]][npm-total-downloads-url]
@@ -25,6 +26,8 @@ Financial technical analysis library in TypeScript. Calculates indicators amd ov
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
 
+[build-status-badge-image]: https://circleci.com/gh/tom-weatherhead/common-utilities.ts.svg?style=shield
+[build-status-url]: https://circleci.com/gh/tom-weatherhead/common-utilities.ts
 [npm-version-badge-image]: https://img.shields.io/npm/v/thaw-ta-math.svg
 [npm-version-url]: https://www.npmjs.com/package/thaw-ta-math
 [latest-tag-badge-image]: https://badgen.net/github/tag/tom-weatherhead/thaw-ta-math
