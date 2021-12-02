@@ -92,12 +92,15 @@
 	},
 	"peerDependencies": {},
 	"// bundledDependencies": "... is an array of package names",
-	"optionalDependencies": {},
+	"optionalDependencies": {
+		"fsevents": "*"
+	},
 	"engines": {
 		"node": ">= 8"
 	},
 	"os": [
 		"darwin",
+		"linux",
 		"win32"
 	],
 	"cpu": [
