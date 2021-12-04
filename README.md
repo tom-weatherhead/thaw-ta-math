@@ -23,11 +23,46 @@ Financial technical analysis library in TypeScript. Calculates indicators and ov
 [![code style: prettier][prettier-badge-image]][prettier-url]
 [![license][license-badge-image]][license-url]
 
+## Indicators
+
+- [adl](https://www.tradingview.com/support/solutions/43000501770-accumulation-distribution-adl/) : Accumulation Distribution Line (created by Marc Chaikin)
+- adx : Average Directional Index (by J. Welles Wilder Jr.)
+- bbp : Bollinger Bands Percentage (by John Bollinger)
+- bbw : Bollinger BandWidth (by John Bollinger)
+- cci : Commodity Channel Index (by Donald Lambert)
+- cho : Chaikin Oscillator (by Marc Chaikin)
+- cmf : Chaikin Money Flow (by Marc Chaikin)
+- ii : Intraday Intensity (by David Bostian)
+- kst : Know Sure Thing (by Martin Pring)
+- macd : Moving Average Convergence Divergence (by Gerald Appel)
+- mfi : Money Flow Index (by Gene Quong and Avram Soudek)
+- obv : On-Balance Volume
+- roc : Price Rate of Change
+- rsi : Relative Strength Index (by J. Welles Wilder Jr.)
+- stoch : Stochastic Oscillator (by Dr. George Lane)
+- stochRsi : Stochastic RSI (by Tushar S. Chande and Stanley Kroll)
+- vi : Vortex Indicator (by Etienne Botes and Douglas Siepman)
+- vwmacd : Volume-Weighted MACD (by Buff Dormeier)
+- williams : Williams %R (aka Williams Percent Range) (by Larry Williams)
+
+## Overlays
+
+- bb : Bollinger Bands (by John Bollinger)
+- dema : Double Exponential Moving Average
+- ebb
+- keltner
+- psar : Parabolic Stop and Reversal
+- tema : Triple Exponential Moving Average
+- vbp : Volume by Price
+- vwap : Volume Weighted Average Price
+- vwma : Volume-Weighted Moving Average
+- zigzag
+
 ## License
 [MIT](https://choosealicense.com/licenses/mit/)
 
-[build-status-badge-image]: https://circleci.com/gh/tom-weatherhead/common-utilities.ts.svg?style=shield
-[build-status-url]: https://circleci.com/gh/tom-weatherhead/common-utilities.ts
+[build-status-badge-image]: https://circleci.com/gh/tom-weatherhead/thaw-ta-math.svg?style=shield
+[build-status-url]: https://circleci.com/gh/tom-weatherhead/thaw-ta-math
 [npm-version-badge-image]: https://img.shields.io/npm/v/thaw-ta-math.svg
 [npm-version-url]: https://www.npmjs.com/package/thaw-ta-math
 [latest-tag-badge-image]: https://badgen.net/github/tag/tom-weatherhead/thaw-ta-math

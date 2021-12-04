@@ -9,11 +9,18 @@ jobs:
     steps:
       - checkout
       - node/install-packages
+      # Download the test reporter as a static binary
+      - run: curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+      - run: chmod +x ./cc-test-reporter
+      - run: ./cc-test-reporter before-build
       - run: npm run prettier-check
       - run: npm run lint
       - run: npm run build
       - run: npm run rollup
       - run: npm test
+      - run: ./cc-test-reporter after-build -t lcov
+      - store_artifacts: # Upload the test coverage results as an artifact
+          path: ./coverage/lcov.info
 workflows:
   test_my_app:
     jobs:
