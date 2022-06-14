@@ -383,11 +383,15 @@ export function kst(
 // MACD = ema(close, winshort) - ema(close, winlong)
 // Signal = ema(MACD, winsig)
 
+export const macdDefaultFastPeriod = 12;
+export const macdDefaultSlowPeriod = 26;
+export const macdDefaultSignalPeriod = 9;
+
 export function macd(
 	$close: number[],
-	winshort = 12,
-	winlong = 26,
-	winsig = 9
+	winshort = macdDefaultFastPeriod,
+	winlong = macdDefaultSlowPeriod,
+	winsig = macdDefaultSignalPeriod
 ): {
 	line: number[];
 	signal: number[];
