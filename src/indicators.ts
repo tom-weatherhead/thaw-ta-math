@@ -154,7 +154,8 @@ export function adx(
 		dip,
 		dim
 	);
-	const adx = createNaNArray(14).concat(ema(dx.slice(14), 2 * window - 1));
+	// const adx = createNaNArray(14).concat(ema(dx.slice(14), 2 * window - 1));
+	const adx = createNaNArray(window).concat(ema(dx.slice(window), 2 * window - 1));
 
 	return { dip, dim, adx };
 }
