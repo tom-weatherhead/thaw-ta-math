@@ -84,7 +84,7 @@ export function sma(series: number[], window: number): number[] {
 
 // Original implementation:
 // If start is truthy, use it as the seed of the EMA calculation
-// Else, use mean(series.slice(0, window)) as the seed. (But then series[i] ... series[window - 1] are use twice in the overall calculation)
+// Else, use mean(series.slice(0, window)) as the seed. (But then series[i] ... series[window - 1] are used twice in the overall calculation)
 
 export function ema(
 	series: number[],

@@ -26,7 +26,11 @@ export function bb(
 	$close: number[],
 	window = 20,
 	mult = 2
-): Record<string, number[]> {
+): {
+	lower: number[];
+	middle: number[];
+	upper: number[];
+} {
 	const ma = sma($close, window);
 	const dev = stdev($close, window); // Standard deviation
 	const upper = pointwise((a: number, b: number) => a + b * mult, ma, dev);
@@ -49,7 +53,11 @@ export function ebb(
 	$close: number[],
 	window = 10,
 	mult = 2
-): Record<string, number[]> {
+): {
+	lower: number[];
+	middle: number[];
+	upper: number[];
+} {
 	const ma = ema($close, window);
 	const dev = expdev($close, window);
 	const upper = pointwise((a: number, b: number) => a + b * mult, ma, dev);
@@ -64,7 +72,11 @@ export function keltner(
 	$close: number[],
 	window = 14,
 	mult = 2
-): Record<string, number[]> {
+): {
+	lower: number[];
+	middle: number[];
+	upper: number[];
+} {
 	const middle = ema($close, window);
 	const atrValues = atr($high, $low, $close, window);
 	const scaledAtrValues = atrValues.map((n) => mult * n);
@@ -185,7 +197,7 @@ export function vbp(
 		Math.floor(((c - bottom) / (top - bottom)) * (zones - 1))
 	);
 
-	pointwise((i, v) => (vbp[i] += v), indices, volumeSlice);
+	pointwise((i: number, v: number) => (vbp[i] += v), indices, volumeSlice);
 
 	return {
 		bottom, // number
@@ -239,7 +251,10 @@ export function zigzag(
 	$high: number[],
 	$low: number[],
 	percent = 15
-): Record<string, number[]> {
+): {
+	time: number[];
+	price: number[];
+} {
 	let lowest = $low[0];
 	let thattime = $time[0];
 	let isUp = false;
@@ -437,7 +452,8 @@ export function srFibonacciRetracement(
 	const fnAvg3 = (a: number, b: number, c: number) => (a + b + c) / 3;
 	const pivotPoints = pointwise(fnAvg3, $high, $low, $close);
 
-	const diffN = (n: number) => diff.map((d) => d * fibRetracement[n - 1]);
+	const diffN = (n: number) =>
+		diff.map((d: number) => d * fibRetracement[n - 1]);
 
 	const diff1 = diffN(1);
 	const diff2 = diffN(2);

@@ -1,10 +1,32 @@
 {
 	"compilerOptions": {
+		"allowJs": false,
+		"allowUnreachableCode": false,
+		"allowUnusedLabels": false,
+		"checkJs": false,
 		"declaration": true,
+		"declarationDir": "./dist/types",
+		"declarationMap": true,
+		"disableSizeLimit": false,
+		"downlevelIteration": false,
+		"importHelpers": false,
 		"module": "es2015",
 		"moduleResolution": "node",
-		"noImplicitThis": true,
+		"noEmitOnError": true,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitOverride": true,
+		"noImplicitReturns": true,
+		"noPropertyAccessFromIndexSignature": true,
+		"noUncheckedIndexedAccess": false,
+		"noUnusedLocals": true,
 		"outDir": "./dist/types",
+		"plugins": [
+			{
+				"name": "typescript-eslint-language-service"
+			}
+		],
+		"removeComments": true,
+		"resolveJsonModule": false,
 		"sourceMap": false,
 		"strict": true,
 		"target": "es2015",

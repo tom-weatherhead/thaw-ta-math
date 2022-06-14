@@ -388,7 +388,11 @@ export function macd(
 	winshort = 12,
 	winlong = 26,
 	winsig = 9
-): Record<string, number[]> {
+): {
+	line: number[];
+	signal: number[];
+	hist: number[];
+} {
 	const line = pointwise(
 		subtract,
 		ema($close, winshort),
@@ -625,7 +629,11 @@ export function vwmacd(
 	winshort = 12,
 	winlong = 26,
 	winsig = 9
-): Record<string, number[]> {
+): {
+	line: number[];
+	signal: number[];
+	hist: number[];
+} {
 	const vwprice = pointwise(multiply, $close, $volume);
 	const line = pointwise(
 		subtract,
