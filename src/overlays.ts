@@ -8,7 +8,7 @@ import {
 	pointwise,
 	rolling,
 	subtract,
-	sum
+	sum // , unspreadArrayParameter
 } from 'thaw-common-utilities.ts';
 
 import { sma, ema, stdev, expdev, atr, typicalPrice } from './core';
@@ -47,6 +47,40 @@ export function dema($close: number[], window = 10): number[] {
 		ema1,
 		ema(ema1, window)
 	);
+}
+
+// The Formula for Donchian Channels Is:
+//
+// UC = Highest High in Last N Periods
+// Middle Channel=((UC+LC)/2)
+// LC = Lowest Low in Last N periods
+//
+// where:
+//
+// UC=Upper channel
+// N=Number of minutes, hours, days, weeks, months
+// Period=Minutes, hours, days, weeks, months
+// LC=Lower channel
+
+export function donchian(
+	$high: number[],
+	$low: number[],
+	// $close: number[],
+	window: number
+): {
+	lower: number[];
+	middle: number[];
+	upper: number[];
+} {
+	const lower = rolling(Math.min, $low, window);
+	const upper = rolling(Math.max, $high, window);
+	const middle = pointwise(
+		(a: number, b: number) => (a + b) / 2,
+		lower,
+		upper
+	);
+
+	return { lower, middle, upper };
 }
 
 export function ebb(
