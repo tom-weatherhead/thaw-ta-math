@@ -2,13 +2,15 @@
 
 import {
 	add,
+	binaryMultiply,
 	createNaNArray,
-	fnMultiplication,
-	fnSafeDivision,
+	// fnMultiplication,
+	// fnSafeDivision,
 	pointwise,
 	rolling,
+	safeDivide,
 	subtract,
-	sum // , unspreadArrayParameter
+	sum
 } from 'thaw-common-utilities.ts';
 
 import { sma, ema, stdev, expdev, atr, typicalPrice } from './core';
@@ -31,13 +33,23 @@ export function bb(
 	middle: number[];
 	upper: number[];
 } {
-	const ma = sma($close, window);
+	const middle = sma($close, window);
 	const dev = stdev($close, window); // Standard deviation
-	const upper = pointwise((a: number, b: number) => a + b * mult, ma, dev);
-	const lower = pointwise((a: number, b: number) => a - b * mult, ma, dev);
+	const upper = pointwise(
+		(a: number, b: number) => a + b * mult,
+		middle,
+		dev
+	);
+	const lower = pointwise(
+		(a: number, b: number) => a - b * mult,
+		middle,
+		dev
+	);
 
-	return { lower, middle: ma, upper };
+	return { lower, middle, upper };
 }
+
+// Double EMA
 
 export function dema($close: number[], window = 10): number[] {
 	const ema1 = ema($close, window);
@@ -48,6 +60,8 @@ export function dema($close: number[], window = 10): number[] {
 		ema(ema1, window)
 	);
 }
+
+// Donchian Channels
 
 // The Formula for Donchian Channels Is:
 //
@@ -66,7 +80,7 @@ export function donchian(
 	$high: number[],
 	$low: number[],
 	// $close: number[],
-	window: number
+	window = 20 // : number
 ): {
 	lower: number[];
 	middle: number[];
@@ -92,13 +106,23 @@ export function ebb(
 	middle: number[];
 	upper: number[];
 } {
-	const ma = ema($close, window);
+	const middle = ema($close, window);
 	const dev = expdev($close, window);
-	const upper = pointwise((a: number, b: number) => a + b * mult, ma, dev);
-	const lower = pointwise((a: number, b: number) => a - b * mult, ma, dev);
+	const upper = pointwise(
+		(a: number, b: number) => a + b * mult,
+		middle,
+		dev
+	);
+	const lower = pointwise(
+		(a: number, b: number) => a - b * mult,
+		middle,
+		dev
+	);
 
-	return { lower, middle: ma, upper };
+	return { lower, middle, upper };
 }
+
+// Keltner Channels
 
 export function keltner(
 	$high: number[],
@@ -111,9 +135,9 @@ export function keltner(
 	middle: number[];
 	upper: number[];
 } {
+	const fnmult = (n: number) => mult * n;
 	const middle = ema($close, window);
-	const atrValues = atr($high, $low, $close, window);
-	const scaledAtrValues = atrValues.map((n) => mult * n);
+	const scaledAtrValues = atr($high, $low, $close, window).map(fnmult);
 	// const upper = pointwise(
 	// 	(a: number, b: number) => a + mult * b,
 	// 	middle,
@@ -197,6 +221,8 @@ export function psar(
 	// ));
 }
 
+// Triple EMA
+
 export function tema($close: number[], window = 10): number[] {
 	const ema1 = ema($close, window);
 	const ema2 = ema(ema1, window);
@@ -271,10 +297,10 @@ export function vwma(
 	// Note: This works with operator fnMultiplication because
 	// exactly two arrays are passed to pointwise(); it would not work
 	// with some other number of arrays.
-	const vwprices = pointwise(fnMultiplication, $close, $volume);
+	const vwprices = pointwise(binaryMultiply, $close, $volume);
 
 	return pointwise(
-		fnSafeDivision,
+		safeDivide,
 		rolling(sum, vwprices, window),
 		rolling(sum, $volume, window)
 	);

@@ -14,7 +14,7 @@
 // - Force Index
 // - Momentum
 // - Relative Vigor Index
-// - Volumes?
+// - Volumes? (Forex trading volumes cannot be measured reliably)
 // - Fractals (Bill Williams)
 // - Gator Oscillator (Bill Williams)
 // - Market Fecilitation Index (Bill Williams)

@@ -101,21 +101,15 @@ export function ema(
 // Rolling standard deviation?
 
 export function stdev(series: number[], window: number): number[] {
-	// return rolling((...array: number[]) => sd(array), series, window);
 	return rolling(unspreadArrayParameter(sd), series, window);
 }
 
 export function madev(series: number[], window: number): number[] {
-	// return rolling((...args: number[]) => mad(args), series, window);
 	return rolling(unspreadArrayParameter(mad), series, window);
 }
 
 export function expdev(series: number[], window: number): number[] {
-	return ema(
-		sqrDiff(series, ema(series, window)),
-		window
-		// ).map((x: number) => Math.sqrt(x));
-	).map(Math.sqrt);
+	return ema(sqrDiff(series, ema(series, window)), window).map(Math.sqrt);
 }
 
 /* J. Welles Wilder Jr.'s functions */
