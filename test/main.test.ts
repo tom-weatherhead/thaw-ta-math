@@ -659,7 +659,13 @@ test('MACD test 1', () => {
 
 	// Act
 	const expectedResult = TA.macd(test1Close, winshort, winlong, winsig);
-	const actualResult = engine.macd(test1Close, winshort, winlong, winsig);
+	// const { line, signal, hist, histColours } = engine.macd(test1Close, winshort, winlong, winsig);
+	const { line, signal, hist } = engine.macd(test1Close, winshort, winlong, winsig);
+	const actualResult = { line, signal, hist };
+
+	// for (const [r, g, b] of histColours) {
+	// 	console.log(`histColour: R ${r}, G ${g}, B ${b}`);
+	// }
 
 	// Assert
 	expect(actualResult).toStrictEqual(expectedResult);

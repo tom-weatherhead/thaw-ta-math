@@ -67,8 +67,8 @@
 	},
 	"publishConfig": {},
 	"dependencies": {
-		"thaw-common-utilities.ts": "^0.0.12",
-		"thaw-macd": "file:thaw-macd.tgz"
+		"thaw-common-utilities.ts": "^0.0.13",
+		"thaw-macd": "^0.0.6"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.18.5",

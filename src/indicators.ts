@@ -385,10 +385,36 @@ export function kst(
 // Moving Average Convergence Divergence - Created by Gerald Appel
 // MACD = ema(close, winshort) - ema(close, winlong)
 // Signal = ema(MACD, winsig)
+// MACD Histogram = MACD − Signal Line
+
+// Colour of a histogram bar =
+// if (histogram value >= 0) {
+// 	if (histogram value >= previous histogram value) {
+// 		dark red
+// 	} else {
+// 		light (pale) red
+// 	}
+// } else {
+// 	if (histogram value <= previous histogram value) {
+// 		dark green
+// 	} else {
+// 		light (pale) green
+// 	}
+// }
+// See e.g. https://www.youtube.com/watch?v=VfwsAhlIyJA
 
 export const macdDefaultFastPeriod = 12;
 export const macdDefaultSlowPeriod = 26;
 export const macdDefaultSignalPeriod = 9;
+
+export type RGBColourType = [number, number, number];
+
+// Colours: [red, green, blue], each range [0...255]
+export const colourGrey: RGBColourType = [127, 127, 127];
+export const colourGreenHalf: RGBColourType = [0, 127, 0];
+export const colourGreenFull: RGBColourType = [0, 255, 0];
+export const colourRedHalf: RGBColourType = [127, 0, 0];
+export const colourRedFull: RGBColourType = [255, 0, 0];
 
 export function macd(
 	$close: number[],
@@ -399,6 +425,7 @@ export function macd(
 	line: number[];
 	signal: number[];
 	hist: number[];
+	histColours: RGBColourType[];
 } {
 	const line = pointwise(
 		subtract,
@@ -409,10 +436,30 @@ export function macd(
 
 	const hist = pointwise(subtract, line, signal);
 
+	const histColours: RGBColourType[] = [];
+
+	if (hist.length >= 0) {
+		histColours.push(colourGrey);
+
+		// Or use cascade()
+		for (let i = 1; i < hist.length; ++i) {
+			if (hist[i] >= 0) {
+				histColours.push(
+					hist[i] >= hist[i - 1] ? colourRedFull : colourRedHalf
+				);
+			} else {
+				histColours.push(
+					hist[i] <= hist[i - 1] ? colourGreenFull : colourGreenHalf
+				);
+			}
+		}
+	}
+
 	return {
 		line,
 		signal,
-		hist
+		hist,
+		histColours
 	};
 }
 
@@ -473,6 +520,41 @@ export function obv(
 
 	return { line: result, signal: sma(result, signal) };
 }
+
+// PPO : Percentage Price Oscillator
+// = MACD expressed as a percent
+// See https://www.investopedia.com/terms/p/ppo.asp
+
+// PPO = 100 * (12-period EMA − 26-period EMA) / 26-period EMA
+// Signal Line = 9-period EMA of PPO
+// PPO Histogram = PPO − Signal Line
+// where:EMA=Exponential moving average
+
+// export function ppo(
+// 	$close: number[],
+// 	winshort = macdDefaultFastPeriod,
+// 	winlong = macdDefaultSlowPeriod,
+// 	winsig = macdDefaultSignalPeriod
+// ): {
+// 	line: number[];
+// 	signal: number[];
+// 	hist: number[];
+// } {
+// 	// const line = 100 * pointwise(
+// 	// 	subtract,
+// 	// 	ema($close, winshort),
+// 	// 	ema($close, winlong)
+// 	// ); // / ema($close, winlong)
+// 	const signal = ema(line, winsig);
+//
+// 	const hist = pointwise(subtract, line, signal);
+//
+// 	return {
+// 		line,
+// 		signal,
+// 		hist
+// 	};
+// }
 
 // Price Rate of Change
 // See https://www.investopedia.com/terms/p/pricerateofchange.asp
