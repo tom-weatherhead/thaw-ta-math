@@ -530,31 +530,34 @@ export function obv(
 // PPO Histogram = PPO − Signal Line
 // where:EMA=Exponential moving average
 
-// export function ppo(
-// 	$close: number[],
-// 	winshort = macdDefaultFastPeriod,
-// 	winlong = macdDefaultSlowPeriod,
-// 	winsig = macdDefaultSignalPeriod
-// ): {
-// 	line: number[];
-// 	signal: number[];
-// 	hist: number[];
-// } {
-// 	// const line = 100 * pointwise(
-// 	// 	subtract,
-// 	// 	ema($close, winshort),
-// 	// 	ema($close, winlong)
-// 	// ); // / ema($close, winlong)
-// 	const signal = ema(line, winsig);
-//
-// 	const hist = pointwise(subtract, line, signal);
-//
-// 	return {
-// 		line,
-// 		signal,
-// 		hist
-// 	};
-// }
+export function ppo(
+	$close: number[],
+	winshort = macdDefaultFastPeriod,
+	winlong = macdDefaultSlowPeriod,
+	winsig = macdDefaultSignalPeriod
+): {
+	line: number[];
+	signal: number[];
+	hist: number[];
+} {
+	const fn = (valueShort: number, valueLong: number) =>
+		(100 * (valueShort - valueLong)) / valueLong;
+	const line = pointwise(
+		// subtract,
+		fn,
+		ema($close, winshort),
+		ema($close, winlong)
+	);
+	const signal = ema(line, winsig);
+
+	const hist = pointwise(subtract, line, signal);
+
+	return {
+		line,
+		signal,
+		hist
+	};
+}
 
 // Price Rate of Change
 // See https://www.investopedia.com/terms/p/pricerateofchange.asp
