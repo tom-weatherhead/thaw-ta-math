@@ -60,6 +60,20 @@ export interface IAdxResult {
 	adx: number[];
 }
 
+// TODO: Move this colour type to thaw-types or thaw-colour
+// export type RGBColourType = [number, number, number];
+// or
+// export interface IRGBColour { r: number; g: number; b: number; }
+// export interface IRGBAColour extends IRGBColour { a: number; }
+
+export interface IMacdResult {
+	line: number[];
+	signal: number[];
+	hist: number[];
+	// histColours: RGBColourType[];
+	histColours: [number, number, number][];
+}
+
 export interface IStochOptions {
 	zeroKZero?: boolean;
 }
@@ -407,14 +421,12 @@ export const macdDefaultFastPeriod = 12;
 export const macdDefaultSlowPeriod = 26;
 export const macdDefaultSignalPeriod = 9;
 
-export type RGBColourType = [number, number, number];
-
 // Colours: [red, green, blue], each range [0...255]
-export const colourGrey: RGBColourType = [127, 127, 127];
-export const colourGreenHalf: RGBColourType = [0, 127, 0];
-export const colourGreenFull: RGBColourType = [0, 255, 0];
-export const colourRedHalf: RGBColourType = [127, 0, 0];
-export const colourRedFull: RGBColourType = [255, 0, 0];
+export const colourGrey: [number, number, number] = [127, 127, 127];
+export const colourGreenHalf: [number, number, number] = [0, 127, 0];
+export const colourGreenFull: [number, number, number] = [0, 255, 0];
+export const colourRedHalf: [number, number, number] = [127, 0, 0];
+export const colourRedFull: [number, number, number] = [255, 0, 0];
 
 export function getMacdResults(
 	line: number[],
@@ -422,12 +434,7 @@ export function getMacdResults(
 	// winshort = macdDefaultFastPeriod,
 	// winlong = macdDefaultSlowPeriod,
 	winsig = macdDefaultSignalPeriod
-): {
-	line: number[];
-	signal: number[];
-	hist: number[];
-	histColours: RGBColourType[];
-} {
+): IMacdResult {
 	// const line = pointwise(
 	// 	subtract,
 	// 	ema($close, winshort),
@@ -437,7 +444,7 @@ export function getMacdResults(
 
 	const hist = pointwise(subtract, line, signal);
 
-	const histColours: RGBColourType[] = [];
+	const histColours: [number, number, number][] = [];
 
 	if (hist.length >= 0) {
 		histColours.push(colourGrey);
@@ -473,12 +480,7 @@ export function getMacdFunction(
 	winshort: number, // = macdDefaultFastPeriod,
 	winlong: number, // = macdDefaultSlowPeriod,
 	winsig: number // = macdDefaultSignalPeriod
-) => {
-	line: number[];
-	signal: number[];
-	hist: number[];
-	histColours: RGBColourType[];
-} {
+) => IMacdResult {
 	return (
 		$close: number[],
 		winshort = macdDefaultFastPeriod,
@@ -494,7 +496,7 @@ export function getMacdFunction(
 
 		const hist = pointwise(subtract, line, signal);
 
-		const histColours: RGBColourType[] = [];
+		const histColours: [number, number, number][] = [];
 
 		if (hist.length >= 0) {
 			histColours.push(colourGrey);
@@ -536,12 +538,7 @@ export function macd(
 	winshort = macdDefaultFastPeriod,
 	winlong = macdDefaultSlowPeriod,
 	winsig = macdDefaultSignalPeriod
-): {
-	line: number[];
-	signal: number[];
-	hist: number[];
-	histColours: RGBColourType[];
-} {
+): IMacdResult {
 	return getMacdResults(
 		pointwise(subtract, ema($close, winshort), ema($close, winlong)),
 		winsig
@@ -620,12 +617,7 @@ export function ppo(
 	winshort = macdDefaultFastPeriod,
 	winlong = macdDefaultSlowPeriod,
 	winsig = macdDefaultSignalPeriod
-): {
-	line: number[];
-	signal: number[];
-	hist: number[];
-	histColours: RGBColourType[];
-} {
+): IMacdResult {
 	const fn = (valueShort: number, valueLong: number) =>
 		(100 * (valueShort - valueLong)) / valueLong;
 
