@@ -416,10 +416,11 @@ export const colourGreenFull: RGBColourType = [0, 255, 0];
 export const colourRedHalf: RGBColourType = [127, 0, 0];
 export const colourRedFull: RGBColourType = [255, 0, 0];
 
-export function macd(
-	$close: number[],
-	winshort = macdDefaultFastPeriod,
-	winlong = macdDefaultSlowPeriod,
+export function getMacdResults(
+	line: number[],
+	// $close: number[],
+	// winshort = macdDefaultFastPeriod,
+	// winlong = macdDefaultSlowPeriod,
 	winsig = macdDefaultSignalPeriod
 ): {
 	line: number[];
@@ -427,11 +428,11 @@ export function macd(
 	hist: number[];
 	histColours: RGBColourType[];
 } {
-	const line = pointwise(
-		subtract,
-		ema($close, winshort),
-		ema($close, winlong)
-	);
+	// const line = pointwise(
+	// 	subtract,
+	// 	ema($close, winshort),
+	// 	ema($close, winlong)
+	// );
 	const signal = ema(line, winsig);
 
 	const hist = pointwise(subtract, line, signal);
@@ -461,6 +462,90 @@ export function macd(
 		hist,
 		histColours
 	};
+}
+
+// BEGIN 2022-06-28 An experiment
+
+export function getMacdFunction(
+	fn: (valueShort: number, valueLong: number) => number
+): (
+	$close: number[],
+	winshort: number, // = macdDefaultFastPeriod,
+	winlong: number, // = macdDefaultSlowPeriod,
+	winsig: number // = macdDefaultSignalPeriod
+) => {
+	line: number[];
+	signal: number[];
+	hist: number[];
+	histColours: RGBColourType[];
+} {
+	return (
+		$close: number[],
+		winshort = macdDefaultFastPeriod,
+		winlong = macdDefaultSlowPeriod,
+		winsig = macdDefaultSignalPeriod
+	) => {
+		const line = pointwise(
+			fn,
+			ema($close, winshort),
+			ema($close, winlong)
+		);
+		const signal = ema(line, winsig);
+
+		const hist = pointwise(subtract, line, signal);
+
+		const histColours: RGBColourType[] = [];
+
+		if (hist.length >= 0) {
+			histColours.push(colourGrey);
+
+			// Or use cascade()
+			for (let i = 1; i < hist.length; ++i) {
+				if (hist[i] >= 0) {
+					histColours.push(
+						hist[i] >= hist[i - 1] ? colourRedFull : colourRedHalf
+					);
+				} else {
+					histColours.push(
+						hist[i] <= hist[i - 1]
+							? colourGreenFull
+							: colourGreenHalf
+					);
+				}
+			}
+		}
+
+		return {
+			line,
+			signal,
+			hist,
+			histColours
+		};
+	};
+}
+
+export const macd2 = getMacdFunction(subtract);
+export const ppo2 = getMacdFunction((valueShort: number, valueLong: number) =>
+	safeDivide(100 * (valueShort - valueLong), valueLong)
+);
+
+// END 2022-06-28 An experiment
+
+export function macd(
+	$close: number[],
+	winshort = macdDefaultFastPeriod,
+	winlong = macdDefaultSlowPeriod,
+	winsig = macdDefaultSignalPeriod
+): {
+	line: number[];
+	signal: number[];
+	hist: number[];
+	histColours: RGBColourType[];
+} {
+	return getMacdResults(
+		pointwise(subtract, ema($close, winshort), ema($close, winlong)),
+		winsig
+	);
 }
 
 // Money Flow Index	- Created by Gene Quong and Avram Soudek
@@ -539,24 +624,31 @@ export function ppo(
 	line: number[];
 	signal: number[];
 	hist: number[];
+	histColours: RGBColourType[];
 } {
 	const fn = (valueShort: number, valueLong: number) =>
 		(100 * (valueShort - valueLong)) / valueLong;
-	const line = pointwise(
-		// subtract,
-		fn,
-		ema($close, winshort),
-		ema($close, winlong)
+
+	return getMacdResults(
+		pointwise(fn, ema($close, winshort), ema($close, winlong)),
+		winsig
 	);
-	const signal = ema(line, winsig);
 
-	const hist = pointwise(subtract, line, signal);
-
-	return {
-		line,
-		signal,
-		hist
-	};
+	// const line = pointwise(
+	// 	// subtract,
+	// 	fn,
+	// 	ema($close, winshort),
+	// 	ema($close, winlong)
+	// );
+	// const signal = ema(line, winsig);
+	//
+	// const hist = pointwise(subtract, line, signal);
+	//
+	// return {
+	// 	line,
+	// 	signal,
+	// 	hist
+	// };
 }
 
 // Price Rate of Change
