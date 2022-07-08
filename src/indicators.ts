@@ -38,7 +38,7 @@ import {
 } from 'thaw-common-utilities.ts';
 
 import {
-	defaultAtrWindow,
+	defaultAdxWindow,
 	defaultBollingerMovingAverageWindow,
 	defaultBollingerNumberOfStandardDeviations,
 	defaultMacdFastPeriod,
@@ -77,9 +77,9 @@ export interface IAdxResult {
 // export interface IRGBColour { r: number; g: number; b: number; }
 // export interface IRGBAColour extends IRGBColour { a: number; }
 
-export interface IMacdResult {
-	line: number[];
-	signal: number[];
+export interface IMacdResult extends ILineAndSignal {
+	// line: number[];
+	// signal: number[];
 	hist: number[];
 	// histColours: RGBColourType[];
 	histColours: [number, number, number][];
@@ -157,7 +157,7 @@ export function adx(
 	$high: number[],
 	$low: number[],
 	$close: number[],
-	window = defaultAtrWindow // 14
+	window = defaultAdxWindow // 14
 ): IAdxResult {
 	const fn1 = (a: number, b: number) => (a > b ? Math.max(a, 0) : 0);
 	const fn2 = (a: number[], b: number[]) => pointwise(fn1, a, b);
@@ -560,7 +560,10 @@ export function macd(
 	);
 }
 
-// Money Flow Index	- Created by Gene Quong and Avram Soudek
+// MFI - Money Flow Index
+// (Not Bill Williams' Market Fecilitation Index)
+// Created by Gene Quong and Avram Soudek
+
 // MFI is a (closed) volume indicator, with a range [0, 100]
 // MFI = 100 - 100 / (1 + positive price * volume sum / negative price * volume sum)
 
@@ -675,8 +678,8 @@ export function roc($close: number[], window = 14): number[] {
 // (see https://www.investopedia.com/trading/introduction-to-parabolic-sar/)
 
 // The most stereotypical interpretation of RSI is:
-// - Buy when RSI crosses above 30
-// - Sell when RSI crosses below 70
+// - Buy when RSI crosses above 30 (RSI < 30 implies 'oversold')
+// - Sell when RSI crosses below 70 (RSI > 70 implies 'overbought')
 // See Bollinger p. 169
 
 export function rsi($close: number[], window = defaultRsiWindow): number[] {
@@ -817,9 +820,12 @@ export function vi(
 export function vwmacd(
 	$close: number[],
 	$volume: number[],
-	winshort = 12,
-	winlong = 26,
-	winsig = 9
+	winshort = defaultMacdFastPeriod,
+	winlong = defaultMacdSlowPeriod,
+	winsig = defaultMacdSignalPeriod
+	// winshort = 12,
+	// winlong = 26,
+	// winsig = 9
 ): {
 	line: number[];
 	signal: number[];

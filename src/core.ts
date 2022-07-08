@@ -17,6 +17,8 @@ import {
 
 import { emaCore } from 'thaw-macd';
 
+import { defaultAtrWindow } from './constants';
+
 export const absSubtract = (a: number, b: number): number => Math.abs(a - b);
 
 // ThAW: Is our standardDeviation() buggy? It's in common-utilities.ts
@@ -120,7 +122,7 @@ export function atr(
 	$high: number[],
 	$low: number[],
 	$close: number[],
-	window: number
+	window = defaultAtrWindow
 ): number[] {
 	return ema(trueRange($high, $low, $close), 2 * window - 1);
 }
