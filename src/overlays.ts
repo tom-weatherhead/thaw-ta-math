@@ -13,7 +13,27 @@ import {
 	sum
 } from 'thaw-common-utilities.ts';
 
+import {
+	// defaultAtrWindow,
+	defaultBollingerMovingAverageWindow,
+	defaultBollingerNumberOfStandardDeviations,
+	defaultDonchianWindow,
+	defaultKeltnerWindow,
+	defaultKeltnerMult // ,
+	// defaultMacdFastPeriod,
+	// defaultMacdSignalPeriod,
+	// defaultMacdSlowPeriod,
+	// defaultMfiWindow,
+	// defaultRsiWindow
+} from './constants';
+
 import { sma, ema, stdev, expdev, atr, typicalPrice } from './core';
+
+export interface IThreeLinesResult {
+	lower: number[];
+	middle: number[];
+	upper: number[];
+}
 
 export interface IVbpResult {
 	bottom: number;
@@ -26,13 +46,9 @@ export interface IVbpResult {
 // Bollinger himself recommends the defaults window = 20 and mult = 2
 export function bb(
 	$close: number[],
-	window = 20,
-	mult = 2
-): {
-	lower: number[];
-	middle: number[];
-	upper: number[];
-} {
+	window = defaultBollingerMovingAverageWindow,
+	mult = defaultBollingerNumberOfStandardDeviations
+): IThreeLinesResult {
 	const middle = sma($close, window);
 	const dev = stdev($close, window); // Standard deviation
 	const upper = pointwise(
@@ -79,13 +95,8 @@ export function dema($close: number[], window = 10): number[] {
 export function donchian(
 	$high: number[],
 	$low: number[],
-	// $close: number[],
-	window = 20 // : number
-): {
-	lower: number[];
-	middle: number[];
-	upper: number[];
-} {
+	window = defaultDonchianWindow
+): IThreeLinesResult {
 	const lower = rolling(Math.min, $low, window);
 	const upper = rolling(Math.max, $high, window);
 	const middle = pointwise(
@@ -97,15 +108,13 @@ export function donchian(
 	return { lower, middle, upper };
 }
 
+// EMA-based Bollinger Bands?
+
 export function ebb(
 	$close: number[],
 	window = 10,
 	mult = 2
-): {
-	lower: number[];
-	middle: number[];
-	upper: number[];
-} {
+): IThreeLinesResult {
 	const middle = ema($close, window);
 	const dev = expdev($close, window);
 	const upper = pointwise(
@@ -128,13 +137,9 @@ export function keltner(
 	$high: number[],
 	$low: number[],
 	$close: number[],
-	window = 14,
-	mult = 2
-): {
-	lower: number[];
-	middle: number[];
-	upper: number[];
-} {
+	window = defaultKeltnerWindow,
+	mult = defaultKeltnerMult
+): IThreeLinesResult {
 	const fnmult = (n: number) => mult * n;
 	const middle = ema($close, window);
 	const scaledAtrValues = atr($high, $low, $close, window).map(fnmult);

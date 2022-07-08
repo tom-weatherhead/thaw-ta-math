@@ -1,6 +1,6 @@
 {
 	"name": "thaw-ta-math",
-	"version": "0.0.6",
+	"version": "0.0.7",
 	"description": "Financial technical analysis library in TypeScript. Calculates indicators and overlays from OHLCV data.",
 	"keywords": [
 		"finance",

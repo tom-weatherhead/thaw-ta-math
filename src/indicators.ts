@@ -17,7 +17,7 @@
 // - Volumes? (Forex trading volumes cannot be measured reliably)
 // - Fractals (Bill Williams)
 // - Gator Oscillator (Bill Williams)
-// - Market Fecilitation Index (Bill Williams)
+// - Market Fecilitation Index (Bill Williams), the other MFI
 // - Ichimoku
 // - Heiken Ashi
 // - iExposure
@@ -36,6 +36,17 @@ import {
 	safeDivide,
 	subtract
 } from 'thaw-common-utilities.ts';
+
+import {
+	defaultAtrWindow,
+	defaultBollingerMovingAverageWindow,
+	defaultBollingerNumberOfStandardDeviations,
+	defaultMacdFastPeriod,
+	defaultMacdSignalPeriod,
+	defaultMacdSlowPeriod,
+	defaultMfiWindow,
+	defaultRsiWindow
+} from './constants';
 
 import {
 	absSubtract,
@@ -125,7 +136,7 @@ export function adl(
 
 // Average Directional Index (by Wilder) - Indicates the strength of a trend
 
-// Wilder: A strong trend is present when ADX > 25,
+// Wilder: A strong trend is present when ADX > 25, (better: > 30)
 // and no trend is present when ADX < 20.
 
 // Move this to core.ts :
@@ -146,7 +157,7 @@ export function adx(
 	$high: number[],
 	$low: number[],
 	$close: number[],
-	window = 14
+	window = defaultAtrWindow // 14
 ): IAdxResult {
 	const fn1 = (a: number, b: number) => (a > b ? Math.max(a, 0) : 0);
 	const fn2 = (a: number[], b: number[]) => pointwise(fn1, a, b);
@@ -181,7 +192,11 @@ export function adx(
 // - Page 63, Ch 8 (PDF page 92) : Indicator: BandWidth := (upper BB - lower BB) / middle BB
 
 // Bollinger Bands Percentage
-export function bbp($close: number[], window = 20, mult = 2): number[] {
+export function bbp(
+	$close: number[],
+	window = defaultBollingerMovingAverageWindow,
+	mult = defaultBollingerNumberOfStandardDeviations
+): number[] {
 	const band = bb($close, window, mult);
 
 	return pointwise(
@@ -195,7 +210,11 @@ export function bbp($close: number[], window = 20, mult = 2): number[] {
 // Bollinger BandWidth
 // P. 130: bbw = 0.02 is a real Squeeze; bbw = 0.1 is still a Squeeze.
 // A Squeeze occurs when the bbw reaches its 6-month (130-unit?) low.
-export function bbw($close: number[], window = 20, mult = 2): number[] {
+export function bbw(
+	$close: number[],
+	window = defaultBollingerMovingAverageWindow,
+	mult = defaultBollingerNumberOfStandardDeviations
+): number[] {
 	const band = bb($close, window, mult);
 
 	return pointwise(
@@ -417,10 +436,6 @@ export function kst(
 // }
 // See e.g. https://www.youtube.com/watch?v=VfwsAhlIyJA
 
-export const macdDefaultFastPeriod = 12;
-export const macdDefaultSlowPeriod = 26;
-export const macdDefaultSignalPeriod = 9;
-
 // Colours: [red, green, blue], each range [0...255]
 export const colourGrey: [number, number, number] = [127, 127, 127];
 export const colourGreenHalf: [number, number, number] = [0, 127, 0];
@@ -433,7 +448,7 @@ export function getMacdResults(
 	// $close: number[],
 	// winshort = macdDefaultFastPeriod,
 	// winlong = macdDefaultSlowPeriod,
-	winsig = macdDefaultSignalPeriod
+	winsig = defaultMacdSignalPeriod
 ): IMacdResult {
 	// const line = pointwise(
 	// 	subtract,
@@ -483,9 +498,9 @@ export function getMacdFunction(
 ) => IMacdResult {
 	return (
 		$close: number[],
-		winshort = macdDefaultFastPeriod,
-		winlong = macdDefaultSlowPeriod,
-		winsig = macdDefaultSignalPeriod
+		winshort = defaultMacdFastPeriod,
+		winlong = defaultMacdSlowPeriod,
+		winsig = defaultMacdSignalPeriod
 	) => {
 		const line = pointwise(
 			fn,
@@ -535,9 +550,9 @@ export const ppo2 = getMacdFunction((valueShort: number, valueLong: number) =>
 
 export function macd(
 	$close: number[],
-	winshort = macdDefaultFastPeriod,
-	winlong = macdDefaultSlowPeriod,
-	winsig = macdDefaultSignalPeriod
+	winshort = defaultMacdFastPeriod,
+	winlong = defaultMacdSlowPeriod,
+	winsig = defaultMacdSignalPeriod
 ): IMacdResult {
 	return getMacdResults(
 		pointwise(subtract, ema($close, winshort), ema($close, winlong)),
@@ -560,7 +575,7 @@ export function mfi(
 	$low: number[],
 	$close: number[],
 	$volume: number[],
-	window = 14
+	window = defaultMfiWindow // 14
 ): number[] {
 	const tp = typicalPrice($high, $low, $close);
 	const tpv = pointwise(multiply, tp, $volume);
@@ -614,9 +629,9 @@ export function obv(
 
 export function ppo(
 	$close: number[],
-	winshort = macdDefaultFastPeriod,
-	winlong = macdDefaultSlowPeriod,
-	winsig = macdDefaultSignalPeriod
+	winshort = defaultMacdFastPeriod,
+	winlong = defaultMacdSlowPeriod,
+	winsig = defaultMacdSignalPeriod
 ): IMacdResult {
 	const fn = (valueShort: number, valueLong: number) =>
 		(100 * (valueShort - valueLong)) / valueLong;
@@ -664,7 +679,7 @@ export function roc($close: number[], window = 14): number[] {
 // - Sell when RSI crosses below 70
 // See Bollinger p. 169
 
-export function rsi($close: number[], window = 14): number[] {
+export function rsi($close: number[], window = defaultRsiWindow): number[] {
 	// const gains = [0];
 	// const loss = [1e-14];
 
