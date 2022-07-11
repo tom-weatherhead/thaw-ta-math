@@ -78,8 +78,8 @@
 		"eslint": "^8.19.0",
 		"jest": "^28.1.2",
 		"prettier": "^2.7.1",
-		"rollup": "2.76.0",
-		"rollup-plugin-terser": "7.0.2",
+		"rollup": "^2.76.0",
+		"rollup-plugin-terser": "^7.0.2",
 		"ta-math": "^1.0.49",
 		"typescript": "^4.7.4",
 		"typescript-eslint-language-service": "^5.0.0"

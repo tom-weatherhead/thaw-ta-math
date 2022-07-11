@@ -182,16 +182,6 @@ export function keltner(
 	const fnmult = (n: number) => mult * n;
 	const middle = ema($close, window);
 	const scaledAtrValues = atr($high, $low, $close, window).map(fnmult);
-	// const upper = pointwise(
-	// 	(a: number, b: number) => a + mult * b,
-	// 	middle,
-	// 	atrValues
-	// );
-	// const lower = pointwise(
-	// 	(a: number, b: number) => a - mult * b,
-	// 	middle,
-	// 	atrValues
-	// );
 	const upper = pointwise(add, middle, scaledAtrValues);
 	const lower = pointwise(subtract, middle, scaledAtrValues);
 
