@@ -4,8 +4,6 @@ import {
 	add,
 	binaryMultiply,
 	createNaNArray,
-	// fnMultiplication,
-	// fnSafeDivision,
 	pointwise,
 	rolling,
 	safeDivide,
@@ -14,17 +12,11 @@ import {
 } from 'thaw-common-utilities.ts';
 
 import {
-	// defaultAtrWindow,
 	defaultBollingerMovingAverageWindow,
 	defaultBollingerNumberOfStandardDeviations,
 	defaultDonchianWindow,
 	defaultKeltnerWindow,
-	defaultKeltnerMult // ,
-	// defaultMacdFastPeriod,
-	// defaultMacdSignalPeriod,
-	// defaultMacdSlowPeriod,
-	// defaultMfiWindow,
-	// defaultRsiWindow
+	defaultKeltnerMult
 } from './constants';
 
 import { sma, ema, stdev, expdev, atr, typicalPrice } from './core';
@@ -41,7 +33,46 @@ export interface IVbpResult {
 	volumes: number[];
 }
 
-/* Overlays */
+// BEGIN TODO: Use compositor functions? E.g.:
+type TwoArgumentNumericFunction = (x: number, y: number) => number;
+
+// function compUseAResultAsFirstOf2ArgsOfB(
+// 	fnA: TwoArgumentNumericFunction,
+// 	fnB: TwoArgumentNumericFunction,
+// 	argB2: number
+// ): TwoArgumentNumericFunction {
+// 	return (x: number, y: number) => fnB(fnA(x, y), argB2);
+// }
+//
+// function compUseAResultAsSecondOf2ArgsOfB(
+// 	fnA: TwoArgumentNumericFunction,
+// 	fnB: TwoArgumentNumericFunction,
+// 	argB1: number
+// ): TwoArgumentNumericFunction {
+// 	return (x: number, y: number) => fnB(argB1, fnA(x, y));
+// }
+
+// This function name is Insane:
+
+// - comp: This is a function that composites two functions into a single function
+// - Arg2: Use the second argument (fnB)...
+// - Unary: ... to create a unary function (z => fnB(z, argConst))...
+// - WithConst2: ... with argConst being passed as the second argument to fnB...
+// - ThenBinaryAsArg2: ... then pass the result (of fnB(z, argConst)) as the second argument to fnA.
+
+// Yes, I am crazy.
+
+function compArg2UnaryWithConst2ThenBinaryAsArg2(
+	fnA: TwoArgumentNumericFunction,
+	fnB: TwoArgumentNumericFunction,
+	argConst: number
+): TwoArgumentNumericFunction {
+	return (x: number, y: number) => fnB(x, fnA(y, argConst));
+}
+// ... and move this stuff to common-utilities.ts
+// END TODO: Use compositor functions?
+
+// Bollinger Bands
 
 // Bollinger himself recommends the defaults window = 20 and mult = 2
 export function bb(
@@ -52,12 +83,20 @@ export function bb(
 	const middle = sma($close, window);
 	const dev = stdev($close, window); // Standard deviation
 	const upper = pointwise(
-		(a: number, b: number) => a + b * mult,
+		// (a: number, b: number) => a + b * mult,
+		// or replace the above with
+		compArg2UnaryWithConst2ThenBinaryAsArg2(binaryMultiply, add, mult),
 		middle,
 		dev
 	);
 	const lower = pointwise(
-		(a: number, b: number) => a - b * mult,
+		// (a: number, b: number) => a - b * mult,
+		// or replace the above with
+		compArg2UnaryWithConst2ThenBinaryAsArg2(
+			binaryMultiply,
+			subtract,
+			mult
+		),
 		middle,
 		dev
 	);

@@ -3,11 +3,12 @@
 // ADX - Average Directional Index (by Wilder)
 // Indicates the strength of a trend
 export const defaultAdxWindow = 14;
+// An ADX that is < 20 indicates a weak trend or no trend
 // An ADX that is > 25 indicates a strong trend
 // The higher the ADX, the stronger the trend.
 export const defaultAdxThreshold = 25;
 
-// ATR
+// ATR - Average True Range - Useful for setting stop loss deltas
 export const defaultAtrWindow = 14;
 
 // Bollinger bands
@@ -23,10 +24,6 @@ export const defaultDonchianWindow = 20; // ???
 export const defaultKeltnerWindow = 14; // ???
 export const defaultKeltnerMult = 2;
 
-// MACD
-// export const defaultMacdEmaShort = 12;
-// export const defaultMacdEmaLong = 26;
-// export const defaultMacdSignal = 9;
 // MACD
 export const defaultMacdFastPeriod = 12;
 export const defaultMacdSlowPeriod = 26;
